@@ -1,0 +1,17 @@
+{
+  "name": "Theater Trainer",
+  "short_name": "Theater",
+  "description": "Rehearse theatre lines with an AI scene partner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

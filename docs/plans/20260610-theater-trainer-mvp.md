@@ -122,23 +122,23 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 1: Bootstrap the repo, app shell, and CI feedback loop
 
-- [ ] Add `package.json` with dev deps (`@playwright/test`, a tiny static server such
+- [x] Add `package.json` with dev deps (`@playwright/test`, a tiny static server such
   as `sirv-cli` or use `python3 -m http.server`) and scripts: `test:unit`, `test:e2e`,
   `serve`.
-- [ ] Create the static app shell: `index.html` with an import map for `@google/genai`,
+- [x] Create the static app shell: `index.html` with an import map for `@google/genai`,
   `styles.css` (tokens + teleprompter aesthetic lifted from `mockups/demo.html`), and
   `js/app.js` routing between four views: **Library, Add, Rehearse, Settings**.
-- [ ] Add PWA basics: `manifest.webmanifest`, `sw.js` (offline app-shell cache),
+- [x] Add PWA basics: `manifest.webmanifest`, `sw.js` (offline app-shell cache),
   `icons/icon.svg`, and registration in `app.js`.
-- [ ] Add `scripts/local-validate.sh` (idempotent install of npm deps + `npx playwright
+- [x] Add `scripts/local-validate.sh` (idempotent install of npm deps + `npx playwright
   install --with-deps chromium`, then run unit + E2E).
-- [ ] Add `scripts/ci-gate.sh` (commit dirty, push branch, poll `gh run` for the matching
+- [x] Add `scripts/ci-gate.sh` (commit dirty, push branch, poll `gh run` for the matching
   workflow, print failed logs, exit non-zero on failure).
-- [ ] Add `.github/workflows/ci.yml` running on every branch push on `ubuntu-latest`:
+- [x] Add `.github/workflows/ci.yml` running on every branch push on `ubuntu-latest`:
   install Node, deps, Chromium, run `scripts/local-validate.sh`.
-- [ ] Add a trivial Node unit test and a Playwright smoke test (app loads, nav switches
+- [x] Add a trivial Node unit test and a Playwright smoke test (app loads, nav switches
   views, service worker registers).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 2: Settings and persistence
 
