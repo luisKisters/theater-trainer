@@ -142,17 +142,17 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 2: Settings and persistence
 
-- [ ] Build `js/store.js`: load/save state, defaults (empty apiKey; live + text models;
+- [x] Build `js/store.js`: load/save state, defaults (empty apiKey; live + text models;
   voice; `waitMs` VAD value; show-corrections toggle), forward-compatible merge.
-- [ ] Build the Settings view: API-key input (password field, "stored only in this
+- [x] Build the Settings view: API-key input (password field, "stored only in this
   browser" note + link to aistudio.google.com/apikey), voice picker, live/text model
   fields, a **"How long it waits before replying" slider** (1.5s–6s → `waitMs`), and
   a show-word-coloring toggle. Save + status feedback.
-- [ ] Build `js/turn-config.js` mapping `waitMs` → realtimeInputConfig VAD object.
-- [ ] Unit tests: store defaults/load/save/merge; `turn-config` mapping at min/mid/max.
-- [ ] Playwright: enter a key + change the slider, reload, assert persistence; assert
+- [x] Build `js/turn-config.js` mapping `waitMs` → realtimeInputConfig VAD object.
+- [x] Unit tests: store defaults/load/save/merge; `turn-config` mapping at min/mid/max.
+- [x] Playwright: enter a key + change the slider, reload, assert persistence; assert
   Rehearse is blocked with a clear prompt when no key is set.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 3: Script ingestion and library
 
