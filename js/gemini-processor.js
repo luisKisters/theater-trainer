@@ -17,7 +17,11 @@ class GeminiProcessor {
         responseSchema: SCRIPT_SCHEMA,
       },
     });
-    return JSON.parse(response.text());
+    const responseText = typeof response.text === 'function' ? response.text() : response.text;
+    if (typeof responseText !== 'string') {
+      throw new Error('No text returned by Gemini script processor');
+    }
+    return JSON.parse(responseText);
   }
 }
 

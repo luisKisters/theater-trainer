@@ -64,8 +64,8 @@ function injectMocks(script) {
   };
 }
 
-async function setupRehearseWithLive(page) {
-  await page.addInitScript(injectMocks(FIXTURE_SCRIPT), [FIXTURE_SCRIPT]);
+async function setupRehearseWithLive(page, script = FIXTURE_SCRIPT) {
+  await page.addInitScript(injectMocks(script), [script]);
 
   // Persist API key so Rehearse is not blocked
   await page.goto('/#settings');
@@ -164,6 +164,51 @@ test('Partner output transcription streams words into active partner line', asyn
   // Partner words should be streaming (at least some visible)
   const partnerBody = page.locator('#scene-inner .line.partner.active .body');
   await expect(partnerBody).not.toBeEmpty();
+});
+
+test('progress bar tracks matched partner transcript against the script', async ({ page }) => {
+  await setupRehearseWithLive(page);
+  await page.click('#btn-start');
+
+  await page.evaluate(() => {
+    const lb = window.__TT_BACKENDS__.liveBackend;
+    lb.triggerInputTranscription('Hello Bob how are you today.');
+    lb.triggerOutputTranscription('I am doing well thank you.');
+  });
+
+  const state = await page.evaluate(() => window.__TT_TEST__.getState());
+  expect(state.processedWords).toBeGreaterThan(6);
+  await expect(page.locator('#script-progress-label')).toContainText(/\d+%/);
+  await expect(page.locator('#script-progress-fill')).toHaveAttribute('style', /width: [1-9]\d*%/);
+});
+
+test('compact to cue skips earlier partner-only material and keeps two prompts before user turn', async ({ page }) => {
+  const compactFixture = {
+    title: 'Cue Test Scene',
+    author: 'Test',
+    language: 'en',
+    characters: [
+      { id: 'alice', name: 'Alice' },
+      { id: 'bob', name: 'Bob' },
+    ],
+    lines: [
+      { character_id: 'bob', text: 'First setup line.' },
+      { character_id: 'bob', text: 'Second setup line.' },
+      { character_id: 'bob', text: 'Third setup line.' },
+      { character_id: 'bob', text: 'First cue line.' },
+      { character_id: 'bob', text: 'Second cue line.' },
+      { character_id: 'alice', text: 'Now it is my turn.' },
+    ],
+  };
+
+  await setupRehearseWithLive(page, compactFixture);
+  await page.click('#btn-compact');
+
+  await expect(page.locator('.compact-note')).toContainText('3 skipped lines');
+  const state = await page.evaluate(() => window.__TT_TEST__.getState());
+  expect(state.lineIndex).toBe(3);
+  await expect(page.locator('#scene-inner .line.active')).toHaveAttribute('data-idx', '3');
+  await expect(page.locator('#scene-inner .line.active .who')).toContainText('Bob');
 });
 
 test('turnComplete advances to next user line', async ({ page }) => {

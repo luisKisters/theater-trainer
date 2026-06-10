@@ -14,10 +14,12 @@ class EventEmitter {
  * Build the system prompt that turns Gemini into an expressive scene partner.
  * The AI plays every character except userRoleId and never corrects the user.
  */
-export function buildSystemPrompt(script, userRoleId) {
+export function buildSystemPrompt(script, userRoleId, options = {}) {
   const userChar = script.characters.find(c => c.id === userRoleId);
   const otherChars = script.characters.filter(c => c.id !== userRoleId);
+  const startLineIndex = Math.max(0, options.startLineIndex || 0);
   const scriptText = script.lines
+    .slice(startLineIndex)
     .map(l => {
       const name = script.characters.find(c => c.id === l.character_id)?.name || l.character_id;
       return `${name}: ${l.text}`;
@@ -29,8 +31,10 @@ export function buildSystemPrompt(script, userRoleId) {
 Script: "${script.title}"${script.author ? ` by ${script.author}` : ''}
 
 The human plays ${userChar?.name || userRoleId}. You perform all other characters: ${otherChars.map(c => c.name).join(', ')}.
+${startLineIndex > 0 ? `\nEarlier lines have been compacted and should not be spoken. Start from script line ${startLineIndex + 1}.` : ''}
+${options.summary ? `\nCompact context: ${options.summary}` : ''}
 
-Full script:
+Script from the rehearsal start:
 ${scriptText}
 
 Rules:

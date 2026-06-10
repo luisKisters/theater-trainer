@@ -73,6 +73,12 @@ function renderLibrary(el) {
       }
     }
   });
+
+  const pendingRolePickId = globalThis.sessionStorage?.getItem('tt_pending_role_pick');
+  if (pendingRolePickId && scripts.some(s => s.id === pendingRolePickId)) {
+    globalThis.sessionStorage?.removeItem('tt_pending_role_pick');
+    setTimeout(() => showRolePicker(el, pendingRolePickId), 0);
+  }
 }
 
 function showRolePicker(el, scriptId) {
@@ -141,8 +147,10 @@ function renderAdd(el) {
     }
 
     let processor;
+    let usesInjectedProcessor = false;
     if (window.__TT_BACKENDS__?.scriptProcessor) {
       processor = window.__TT_BACKENDS__.scriptProcessor;
+      usesInjectedProcessor = true;
     } else {
       const state = load();
       if (!state.apiKey) {
@@ -169,6 +177,9 @@ function renderAdd(el) {
 
       const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
       addScript({ id, ...result, selectedRole: null, addedAt: new Date().toISOString() });
+      if (!usesInjectedProcessor) {
+        globalThis.sessionStorage?.setItem('tt_pending_role_pick', id);
+      }
 
       setStatus(statusEl, 'Script added!', 'ok');
       setTimeout(() => { location.hash = 'library'; }, 600);
@@ -228,6 +239,12 @@ function renderRehearse(el) {
     <div class="rehearse-header">
       <h1>${escHtml(script.title)}</h1>
       <p class="rehearse-role">You are playing <strong class="rehearse-role-name">${escHtml(role?.name || script.selectedRole)}</strong></p>
+      <div class="script-progress" aria-label="Script progress">
+        <div class="script-progress-track">
+          <div class="script-progress-fill" id="script-progress-fill"></div>
+        </div>
+        <div class="script-progress-label" id="script-progress-label">0%</div>
+      </div>
     </div>
     <div class="scene" id="scene">
       <div class="scene-inner" id="scene-inner"></div>
@@ -238,6 +255,7 @@ function renderRehearse(el) {
         <button class="btn primary" id="btn-reveal-word" disabled><span class="k">space</span> Reveal next word</button>
         <button class="btn accent" id="btn-start">▶ Start</button>
         <button class="btn" id="btn-pause" disabled>⏸ Pause</button>
+        <button class="btn" id="btn-compact">Compact to cue</button>
         <button class="btn" id="btn-prev-line">← Prev</button>
         <button class="btn" id="btn-next-line">Next →</button>
         <div class="spacer"></div>
@@ -247,7 +265,15 @@ function renderRehearse(el) {
   `;
 
   const sceneInner = el.querySelector('#scene-inner');
-  const tp = createTeleprompter(sceneInner, script, script.selectedRole);
+  const progressFill = el.querySelector('#script-progress-fill');
+  const progressLabel = el.querySelector('#script-progress-label');
+  const updateProgress = (state) => {
+    const pct = Math.max(0, Math.min(100, Math.round((state?.progress || 0) * 100)));
+    progressFill.style.width = `${pct}%`;
+    progressLabel.textContent = `${pct}%`;
+  };
+  const tp = createTeleprompter(sceneInner, script, script.selectedRole, { onStateChange: updateProgress });
+  let compactState = null;
 
   const onKeyDown = (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -265,6 +291,19 @@ function renderRehearse(el) {
   document.addEventListener('keydown', onKeyDown);
 
   el.querySelector('#btn-reveal-word').addEventListener('click', () => tp.peek());
+  el.querySelector('#btn-compact').addEventListener('click', () => {
+    if (backendReady) {
+      showToast('Compact before starting the session.', 'err');
+      return;
+    }
+    const result = tp.compactToNextUserTurn(2);
+    if (!result) {
+      showToast('No earlier partner lines to compact before your next cue.', 'err');
+      return;
+    }
+    compactState = result;
+    showToast(result.summary, 'ok');
+  });
   el.querySelector('#btn-prev-line').addEventListener('click', () => tp.prevLine());
   el.querySelector('#btn-next-line').addEventListener('click', () => tp.nextLine());
 
@@ -300,7 +339,10 @@ function renderRehearse(el) {
       ]);
       backend = new lbMod.GeminiLiveBackend(state.apiKey, state.liveModel);
       audioIO = new audioMod.AudioIO();
-      const systemPrompt = lbMod.buildSystemPrompt(script, script.selectedRole);
+      const systemPrompt = lbMod.buildSystemPrompt(script, script.selectedRole, {
+        startLineIndex: tp.getState().lineIndex,
+        summary: compactState?.summary || '',
+      });
       const vadConfig = buildVadConfig(state.waitMs);
       await backend.connect({ voice: state.voice, vadConfig, systemPrompt });
     }
@@ -317,8 +359,7 @@ function renderRehearse(el) {
         inputBuf = '';
         tp.nextLine();
       }
-      const words = text.trim().split(/\s+/).filter(Boolean);
-      for (const _w of words) tp.streamPartnerWord();
+      tp.streamPartnerText(text);
     });
 
     backend.on('audio', ({ data }) => audioIO.play(data));
@@ -347,6 +388,7 @@ function renderRehearse(el) {
       startBtn.disabled = false;
       pauseBtn.disabled = true;
       revealBtn.disabled = true;
+      el.querySelector('#btn-compact').disabled = false;
       showToast('Session disconnected. Click Start to reconnect.', 'err');
     });
 
@@ -364,6 +406,7 @@ function renderRehearse(el) {
       startBtn.disabled = true;
       pauseBtn.disabled = false;
       revealBtn.disabled = false;
+      el.querySelector('#btn-compact').disabled = true;
     } catch (err) {
       let msg;
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -380,6 +423,7 @@ function renderRehearse(el) {
     startBtn.disabled = false;
     pauseBtn.disabled = true;
     revealBtn.disabled = true;
+    el.querySelector('#btn-compact').disabled = false;
   });
 
   // ── Test seam ──────────────────────────────────────────────────────────────
@@ -391,6 +435,8 @@ function renderRehearse(el) {
     prevLine: () => tp.prevLine(),
     getState: () => tp.getState(),
     streamPartnerWord: () => tp.streamPartnerWord(),
+    streamPartnerText: (text) => tp.streamPartnerText(text),
+    compactToNextUserTurn: (promptLines) => tp.compactToNextUserTurn(promptLines),
   };
 
   _rehearseCleanup = () => {

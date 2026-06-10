@@ -165,6 +165,13 @@ s.wrong {
 
 .line.mine.context .body { color: #9a9a9a; font-size: 18px; }
 .line.mine.context .w.said { color: #cfcfcf; }
+.compact-note {
+  border-left: 2px solid var(--amber);
+  color: var(--hint);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 4px 0 4px 12px;
+}
 
 /* ---- control bar ---- */
 .controls {
@@ -408,6 +415,32 @@ s.wrong {
 .rehearse-header h1 { margin: 0 0 2px; font-size: 16px; }
 .rehearse-role { color: var(--context); font-size: 13px; margin: 0; }
 .rehearse-role-name { color: var(--amber); }
+.script-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+.script-progress-track {
+  height: 6px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.script-progress-fill {
+  width: 0;
+  height: 100%;
+  background: var(--amber);
+  transition: width .16s ease;
+}
+.script-progress-label {
+  color: var(--context);
+  font-family: "JetBrains Mono";
+  font-size: 12px;
+  min-width: 34px;
+  text-align: right;
+}
 
 /* ---- slider ---- */
 .slider-row {

@@ -12,6 +12,27 @@ function tokenize(str) {
   return str.trim().split(/\s+/).filter(w => w.length > 0);
 }
 
+function wordsMatchLoose(a, b) {
+  return a.toLowerCase()
+    .replace(/[.,!?;:'"()\-—…«»„"‘’“”]/g, '')
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .trim() === b.toLowerCase()
+    .replace(/[.,!?;:'"()\-—…«»„"‘’“”]/g, '')
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .trim();
+}
+
+function matchedPrefixLength(expected, spoken) {
+  const exp = tokenize(expected);
+  const spk = tokenize(spoken);
+  let matched = 0;
+  for (const word of spk) {
+    if (matched >= exp.length) break;
+    if (wordsMatchLoose(exp[matched], word)) matched++;
+  }
+  return matched;
+}
+
 function hiddenDashes(word) {
   const len = Math.max(2, word.replace(/[.,!?;:'"()]/g, '').length);
   return '▁'.repeat(len);
@@ -24,7 +45,7 @@ function hiddenDashes(word) {
  * @param {string} userRoleId - character_id the user is playing
  * @returns {object} controller
  */
-export function createTeleprompter(containerEl, script, userRoleId) {
+export function createTeleprompter(containerEl, script, userRoleId, options = {}) {
   const lines = script.lines;
 
   let lineIndex = 0;
@@ -34,6 +55,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
   let wordStates = [];  // aligned correction states after finalizeTurn
   let turnFinalized = false;
   const lineHistory = new Map(); // lineIndex → wordStates, persists corrections in context
+  const compactNotes = new Map(); // lineIndex → summary of skipped context
 
   function isUserLine(line) {
     return line.character_id === userRoleId;
@@ -108,7 +130,8 @@ export function createTeleprompter(containerEl, script, userRoleId) {
         body = renderFutureLine(line);
       }
       const isDone = idx === lineIndex && !isUserLine(line) && partnerWords >= tokenize(line.text).length;
-      return `<div class="${lineClasses(idx)}${isDone ? ' done' : ''}" data-idx="${idx}">
+      const note = compactNotes.get(idx);
+      return `${note ? `<div class="compact-note" data-idx="${idx}">${escHtml(note)}</div>` : ''}<div class="${lineClasses(idx)}${isDone ? ' done' : ''}" data-idx="${idx}">
         <div class="who">${escHtml(characterName(line))}</div>
         <div class="body">${body}</div>
       </div>`;
@@ -118,6 +141,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
 
     const activeEl = containerEl.querySelector('.active');
     if (activeEl) activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    options.onStateChange?.(controller.getState());
   }
 
   function resetLineState() {
@@ -148,6 +172,14 @@ export function createTeleprompter(containerEl, script, userRoleId) {
       if (!line || isUserLine(line)) return;
       const words = tokenize(line.text);
       if (partnerWords < words.length) { partnerWords++; render(); }
+    },
+
+    /** Reveal partner progress by matching the model transcript against the current script line. */
+    streamPartnerText(text) {
+      const line = currentLine();
+      if (!line || isUserLine(line)) return;
+      partnerWords = Math.max(partnerWords, matchedPrefixLength(line.text, text));
+      render();
     },
 
     /** Called when the partner finishes speaking. Updates display, does not auto-advance. */
@@ -183,6 +215,24 @@ export function createTeleprompter(containerEl, script, userRoleId) {
       }
     },
 
+    /** Skip ahead to the cue just before the next user line, keeping two prompt lines visible. */
+    compactToNextUserTurn(promptLines = 2) {
+      const nextUserIndex = lines.findIndex((line, idx) => idx > lineIndex && isUserLine(line));
+      if (nextUserIndex < 0) return null;
+
+      const startIndex = Math.max(0, nextUserIndex - promptLines);
+      const skipped = lines.slice(lineIndex, startIndex);
+      if (skipped.length === 0) return null;
+
+      const speakerNames = [...new Set(skipped.map(characterName))].join(', ');
+      const summary = `${skipped.length} skipped line${skipped.length === 1 ? '' : 's'} from ${speakerNames || 'earlier speakers'} before your cue.`;
+      lineIndex = startIndex;
+      compactNotes.set(lineIndex, summary);
+      resetLineState();
+      render();
+      return { startLineIndex: lineIndex, skippedLines: skipped.length, summary };
+    },
+
     /** Go back to the previous line. */
     prevLine() {
       if (lineIndex > 0) {
@@ -213,7 +263,17 @@ export function createTeleprompter(containerEl, script, userRoleId) {
 
     /** Returns internal state snapshot for testing. */
     getState() {
-      return { lineIndex, wordPtr, revealedTo, partnerWords, turnFinalized };
+      const totalWords = lines.reduce((sum, line) => sum + tokenize(line.text).length, 0);
+      const completedWords = lines.slice(0, lineIndex).reduce((sum, line) => sum + tokenize(line.text).length, 0);
+      const active = currentLine();
+      const activeWords = active
+        ? isUserLine(active)
+          ? wordPtr
+          : partnerWords
+        : 0;
+      const processedWords = Math.min(totalWords, completedWords + activeWords);
+      const progress = totalWords > 0 ? processedWords / totalWords : 1;
+      return { lineIndex, wordPtr, revealedTo, partnerWords, turnFinalized, totalWords, processedWords, progress };
     },
   };
 
