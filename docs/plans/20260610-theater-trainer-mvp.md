@@ -229,16 +229,16 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 8: Manual smoke test doc + README
 
-- [ ] Create `docs/manual-smoke-test.md`: exact browser steps with a real key — paste
+- [x] Create `docs/manual-smoke-test.md`: exact browser steps with a real key — paste
   key, ingest a short scene (text + a PDF), pick a role, Start, confirm the partner
   speaks and streams text, confirm a thinking pause does **not** trigger a reply
   (lengthened VAD), confirm wrong words get the strike+box correction, confirm
   Pause/resume and PWA install.
-- [ ] Clearly list which features are covered by automated tests vs. which require a
+- [x] Clearly list which features are covered by automated tests vs. which require a
   real browser + key + mic.
-- [ ] Update `README.md` with setup, the API-key/PAYG note, deploy-to-static-host
+- [x] Update `README.md` with setup, the API-key/PAYG note, deploy-to-static-host
   instructions, and current limitations.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 9: Final review and cleanup
 
