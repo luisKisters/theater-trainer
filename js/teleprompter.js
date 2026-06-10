@@ -33,6 +33,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
   let partnerWords = 0; // how many words shown for active partner line
   let wordStates = [];  // aligned correction states after finalizeTurn
   let turnFinalized = false;
+  const lineHistory = new Map(); // lineIndex → wordStates, persists corrections in context
 
   function isUserLine(line) {
     return line.character_id === userRoleId;
@@ -77,8 +78,16 @@ export function createTeleprompter(containerEl, script, userRoleId) {
     return words.slice(0, partnerWords).map(w => escHtml(w)).join(' ');
   }
 
-  function renderContextLine(line) {
+  function renderContextLine(line, idx) {
     if (isUserLine(line)) {
+      const hist = lineHistory.get(idx);
+      if (hist && hist.length > 0) {
+        return hist.map(({ word, spoken, matched }) => {
+          if (matched) return `<span class="w said">${escHtml(word)}</span>`;
+          if (spoken) return `<s class="wrong">${escHtml(spoken)}</s><span class="fix">${escHtml(word)}</span>`;
+          return `<span class="w said">${escHtml(word)}</span>`;
+        }).join(' ');
+      }
       return tokenize(line.text).map(w => `<span class="w said">${escHtml(w)}</span>`).join(' ');
     }
     return escHtml(line.text);
@@ -92,7 +101,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
     const html = lines.map((line, idx) => {
       let body;
       if (idx < lineIndex) {
-        body = renderContextLine(line);
+        body = renderContextLine(line, idx);
       } else if (idx === lineIndex) {
         body = isUserLine(line) ? renderUserActiveLine(line) : renderPartnerActiveLine(line);
       } else {
@@ -158,6 +167,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
       if (!line || !isUserLine(line)) return;
       const { aligned } = alignWords(line.text, spokenText);
       wordStates = aligned;
+      lineHistory.set(lineIndex, aligned); // persist so corrections show in context
       turnFinalized = true;
       wordPtr = tokenize(line.text).length;
       revealedTo = wordPtr;
@@ -185,6 +195,7 @@ export function createTeleprompter(containerEl, script, userRoleId) {
     /** Restart from the beginning. */
     restart() {
       lineIndex = 0;
+      lineHistory.clear();
       resetLineState();
       render();
     },

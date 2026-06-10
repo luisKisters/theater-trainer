@@ -3,6 +3,7 @@ import { loadScripts, addScript, deleteScript, updateScript } from './scripts-st
 import { validateScript } from './script-schema.js';
 import { fileToBase64 } from './script-processor.js';
 import { createTeleprompter } from './teleprompter.js';
+import { buildVadConfig } from './turn-config.js';
 
 const VIEWS = ['library', 'add', 'rehearse', 'settings'];
 let _rehearseCleanup = null;
@@ -258,7 +259,98 @@ function renderRehearse(el) {
   el.querySelector('#btn-prev-line').addEventListener('click', () => tp.prevLine());
   el.querySelector('#btn-next-line').addEventListener('click', () => tp.nextLine());
 
-  // Expose for Playwright E2E tests
+  // ── Live rehearsal engine ──────────────────────────────────────────────────
+  let backend = null;
+  let audioIO = null;
+  let inputBuf = '';   // accumulated user speech transcript
+  let backendReady = false;
+
+  const startBtn = el.querySelector('#btn-start');
+  const pauseBtn = el.querySelector('#btn-pause');
+
+  const noopAudio = {
+    async startMic() {},
+    stopMic() {},
+    play() {},
+    flush() {},
+    stop() {},
+  };
+
+  async function connectBackend() {
+    if (backendReady) return;
+
+    if (window.__TT_BACKENDS__?.liveBackend) {
+      backend = window.__TT_BACKENDS__.liveBackend;
+      audioIO = window.__TT_BACKENDS__.audioIO || noopAudio;
+      await backend.connect();
+    } else {
+      const [lbMod, audioMod] = await Promise.all([
+        import('./live-backend.js'),
+        import('./audio.js'),
+      ]);
+      backend = new lbMod.GeminiLiveBackend(state.apiKey, state.liveModel);
+      audioIO = new audioMod.AudioIO();
+      const systemPrompt = lbMod.buildSystemPrompt(script, script.selectedRole);
+      const vadConfig = buildVadConfig(state.waitMs);
+      await backend.connect({ voice: state.voice, vadConfig, systemPrompt });
+    }
+
+    // User speech transcript — buffer chunks until turn ends
+    backend.on('inputTranscription', ({ text }) => {
+      inputBuf += (inputBuf ? ' ' : '') + text;
+    });
+
+    // AI response starts: user turn ended → finalize + advance; stream partner words
+    backend.on('outputTranscription', ({ text }) => {
+      if (inputBuf && tp.isUserTurn()) {
+        tp.finalizeTurn(inputBuf);
+        inputBuf = '';
+        tp.nextLine();
+      }
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      for (const _w of words) tp.streamPartnerWord();
+    });
+
+    backend.on('audio', ({ data }) => audioIO.play(data));
+
+    // AI turn complete: flush any pending user buffer, mark partner done, advance
+    backend.on('turnComplete', () => {
+      if (inputBuf && tp.isUserTurn()) {
+        tp.finalizeTurn(inputBuf);
+        inputBuf = '';
+      }
+      if (!tp.isUserTurn() && !tp.isDone()) {
+        tp.partnerTurnComplete();
+      }
+      if (!tp.isDone()) {
+        tp.nextLine();
+        while (!tp.isDone() && !tp.isUserTurn()) tp.nextLine();
+      }
+    });
+
+    backend.on('interrupted', () => audioIO.flush());
+
+    backendReady = true;
+  }
+
+  startBtn.addEventListener('click', async () => {
+    try {
+      await connectBackend();
+      await audioIO.startMic((chunk) => backend.sendAudio(chunk));
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+    } catch (err) {
+      showToast(`Connection error: ${err.message}`, 'error');
+    }
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    audioIO?.stopMic();
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+  });
+
+  // ── Test seam ──────────────────────────────────────────────────────────────
   window.__TT_TEST__ = {
     tp,
     finalizeTurn: (text) => tp.finalizeTurn(text),
@@ -271,6 +363,10 @@ function renderRehearse(el) {
 
   _rehearseCleanup = () => {
     document.removeEventListener('keydown', onKeyDown);
+    if (backendReady) {
+      audioIO?.stop?.();
+      backend?.disconnect();
+    }
     window.__TT_TEST__ = null;
   };
 }

@@ -199,22 +199,22 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 6: Live rehearsal engine
 
-- [ ] Define the `LiveBackend` interface; implement `GeminiLiveBackend`
+- [x] Define the `LiveBackend` interface; implement `GeminiLiveBackend`
   (`ai.live.connect`: `responseModalities:[AUDIO]`, `inputAudioTranscription`,
   `outputAudioTranscription`, `realtimeInputConfig` from `turn-config.js`, speech
   voice, and a system prompt that makes Gemini perform every *other* role expressively
   and **never** correct the user verbally) and `MockLiveBackend` (emits scripted input
   transcription incl. a deliberate error, output transcription, audio + turnComplete).
-- [ ] Wire the Rehearse view: `Start` (connect + mic via `AudioIO`), `Pause`, line
+- [x] Wire the Rehearse view: `Start` (connect + mic via `AudioIO`), `Pause`, line
   prev/next resync, restart. On turn end, run `match.js` over the buffered input
   transcription vs the scripted line and render via `teleprompter.js`; stream the
   partner's output transcription; play audio; handle `interrupted` (flush playback).
-- [ ] Playwright E2E (MockLiveBackend + MockAudioIO): Start → mock user line with one
+- [x] Playwright E2E (MockLiveBackend + MockAudioIO): Start → mock user line with one
   wrong word → assert the deterministic strike+box → mock partner line streams in and
   advances the pointer; Pause stops responses.
-- [ ] Mark the real Live API + mic round-trip as "verified only via the manual browser
+- [x] Mark the real Live API + mic round-trip as "verified only via the manual browser
   smoke test."
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 7: Polish, mobile, and error states
 
