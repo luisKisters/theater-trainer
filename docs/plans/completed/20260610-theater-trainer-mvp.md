@@ -122,131 +122,131 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 1: Bootstrap the repo, app shell, and CI feedback loop
 
-- [ ] Add `package.json` with dev deps (`@playwright/test`, a tiny static server such
+- [x] Add `package.json` with dev deps (`@playwright/test`, a tiny static server such
   as `sirv-cli` or use `python3 -m http.server`) and scripts: `test:unit`, `test:e2e`,
   `serve`.
-- [ ] Create the static app shell: `index.html` with an import map for `@google/genai`,
+- [x] Create the static app shell: `index.html` with an import map for `@google/genai`,
   `styles.css` (tokens + teleprompter aesthetic lifted from `mockups/demo.html`), and
   `js/app.js` routing between four views: **Library, Add, Rehearse, Settings**.
-- [ ] Add PWA basics: `manifest.webmanifest`, `sw.js` (offline app-shell cache),
+- [x] Add PWA basics: `manifest.webmanifest`, `sw.js` (offline app-shell cache),
   `icons/icon.svg`, and registration in `app.js`.
-- [ ] Add `scripts/local-validate.sh` (idempotent install of npm deps + `npx playwright
+- [x] Add `scripts/local-validate.sh` (idempotent install of npm deps + `npx playwright
   install --with-deps chromium`, then run unit + E2E).
-- [ ] Add `scripts/ci-gate.sh` (commit dirty, push branch, poll `gh run` for the matching
+- [x] Add `scripts/ci-gate.sh` (commit dirty, push branch, poll `gh run` for the matching
   workflow, print failed logs, exit non-zero on failure).
-- [ ] Add `.github/workflows/ci.yml` running on every branch push on `ubuntu-latest`:
+- [x] Add `.github/workflows/ci.yml` running on every branch push on `ubuntu-latest`:
   install Node, deps, Chromium, run `scripts/local-validate.sh`.
-- [ ] Add a trivial Node unit test and a Playwright smoke test (app loads, nav switches
+- [x] Add a trivial Node unit test and a Playwright smoke test (app loads, nav switches
   views, service worker registers).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 2: Settings and persistence
 
-- [ ] Build `js/store.js`: load/save state, defaults (empty apiKey; live + text models;
+- [x] Build `js/store.js`: load/save state, defaults (empty apiKey; live + text models;
   voice; `waitMs` VAD value; show-corrections toggle), forward-compatible merge.
-- [ ] Build the Settings view: API-key input (password field, "stored only in this
+- [x] Build the Settings view: API-key input (password field, "stored only in this
   browser" note + link to aistudio.google.com/apikey), voice picker, live/text model
   fields, a **"How long it waits before replying" slider** (1.5s–6s → `waitMs`), and
   a show-word-coloring toggle. Save + status feedback.
-- [ ] Build `js/turn-config.js` mapping `waitMs` → realtimeInputConfig VAD object.
-- [ ] Unit tests: store defaults/load/save/merge; `turn-config` mapping at min/mid/max.
-- [ ] Playwright: enter a key + change the slider, reload, assert persistence; assert
+- [x] Build `js/turn-config.js` mapping `waitMs` → realtimeInputConfig VAD object.
+- [x] Unit tests: store defaults/load/save/merge; `turn-config` mapping at min/mid/max.
+- [x] Playwright: enter a key + change the slider, reload, assert persistence; assert
   Rehearse is blocked with a clear prompt when no key is set.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 3: Script ingestion and library
 
-- [ ] Build `js/script-schema.js`: response schema, `buildIngestParts({text, files})`,
+- [x] Build `js/script-schema.js`: response schema, `buildIngestParts({text, files})`,
   `validateScript()` (requires title, language, characters, ≥1 line).
-- [ ] Define the `ScriptProcessor` interface; implement `MockProcessor` (fixture) and
+- [x] Define the `ScriptProcessor` interface; implement `MockProcessor` (fixture) and
   `GeminiProcessor` (`generateContent` with `responseMimeType: application/json` +
   `responseSchema`, files as `inlineData`; PDFs/images read natively, no client OCR).
-- [ ] Build the Add view: paste textarea, file upload (PDF/images), camera capture
+- [x] Build the Add view: paste textarea, file upload (PDF/images), camera capture
   (`capture="environment"`), a processing state, and error handling.
-- [ ] Build the Library view: list saved scripts (title, author/source, role, line
+- [x] Build the Library view: list saved scripts (title, author/source, role, line
   count), open, delete (with confirm), and a **role picker** dialog.
-- [ ] Unit tests: schema parts builder, `validateScript` accept/reject, `fileToBase64`,
+- [x] Unit tests: schema parts builder, `validateScript` accept/reject, `fileToBase64`,
   `MockProcessor` output validates.
-- [ ] Playwright (MockProcessor via test seam): paste text → process → script appears in
+- [x] Playwright (MockProcessor via test seam): paste text → process → script appears in
   Library → pick a role → land on Rehearse.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 4: Audio I/O
 
-- [ ] Build `js/audio-dsp.js` (pure): `floatTo16kBase64`, `base64<->bytes`, and the
+- [x] Build `js/audio-dsp.js` (pure): `floatTo16kBase64`, `base64<->bytes`, and the
   playback scheduling helper. Build `js/audio.js`: `MicCapture` (AudioWorklet →
   downsample → 16 kHz Int16 base64 chunks) and `PcmPlayer` (gapless 24 kHz queue with
   `flush()` for interruptions), behind an `AudioIO` interface; add `MockAudioIO`.
-- [ ] Unit tests for `audio-dsp.js`: resample length/scaling, base64 round-trip,
+- [x] Unit tests for `audio-dsp.js`: resample length/scaling, base64 round-trip,
   schedule-time monotonicity.
-- [ ] Mark real mic capture + playback as "verified only via the manual browser smoke
+- [x] Mark real mic capture + playback as "verified only via the manual browser smoke
   test" (no audio device in CI).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 5: Deterministic matching + teleprompter renderer
 
-- [ ] Finalize `js/match.js` (LCS alignment, tolerance for punctuation/umlauts/≤1 edit
+- [x] Finalize `js/match.js` (LCS alignment, tolerance for punctuation/umlauts/≤1 edit
   on long words).
-- [ ] Build `js/teleprompter.js`: render the scrolling scene — gray context lines, the
+- [x] Build `js/teleprompter.js`: render the scrolling scene — gray context lines, the
   active partner line streaming in, the user's line hidden→hint→white per word, the
   current-word underline, and strike-through + boxed corrections; auto-scroll the
   active line into view. Reuse the demo's word-state CSS.
-- [ ] Unit tests for `match.js`: exact match, missing word, extra word, substitution,
+- [x] Unit tests for `match.js`: exact match, missing word, extra word, substitution,
   reordering, punctuation/umlaut tolerance, empty input.
-- [ ] Playwright: drive the renderer from fixtures (no Live) through hidden → space-peek
+- [x] Playwright: drive the renderer from fixtures (no Live) through hidden → space-peek
   → said → wrong-word states and assert the DOM/classes.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 6: Live rehearsal engine
 
-- [ ] Define the `LiveBackend` interface; implement `GeminiLiveBackend`
+- [x] Define the `LiveBackend` interface; implement `GeminiLiveBackend`
   (`ai.live.connect`: `responseModalities:[AUDIO]`, `inputAudioTranscription`,
   `outputAudioTranscription`, `realtimeInputConfig` from `turn-config.js`, speech
   voice, and a system prompt that makes Gemini perform every *other* role expressively
   and **never** correct the user verbally) and `MockLiveBackend` (emits scripted input
   transcription incl. a deliberate error, output transcription, audio + turnComplete).
-- [ ] Wire the Rehearse view: `Start` (connect + mic via `AudioIO`), `Pause`, line
+- [x] Wire the Rehearse view: `Start` (connect + mic via `AudioIO`), `Pause`, line
   prev/next resync, restart. On turn end, run `match.js` over the buffered input
   transcription vs the scripted line and render via `teleprompter.js`; stream the
   partner's output transcription; play audio; handle `interrupted` (flush playback).
-- [ ] Playwright E2E (MockLiveBackend + MockAudioIO): Start → mock user line with one
+- [x] Playwright E2E (MockLiveBackend + MockAudioIO): Start → mock user line with one
   wrong word → assert the deterministic strike+box → mock partner line streams in and
   advances the pointer; Pause stops responses.
-- [ ] Mark the real Live API + mic round-trip as "verified only via the manual browser
+- [x] Mark the real Live API + mic round-trip as "verified only via the manual browser
   smoke test."
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 7: Polish, mobile, and error states
 
-- [ ] Mobile: controls render as a bottom sheet (rounded top, grab handle, **Reveal
+- [x] Mobile: controls render as a bottom sheet (rounded top, grab handle, **Reveal
   next word** as the prominent action) per `mockups/demo.html`; responsive scene type.
-- [ ] Error/empty states: invalid/missing API key, microphone permission denied,
+- [x] Error/empty states: invalid/missing API key, microphone permission denied,
   dropped/closed socket (offer reconnect), ingestion failure, empty Library.
-- [ ] Keyboard: space = reveal next word; prev/next line navigation.
-- [ ] Playwright: manifest + offline shell load; mobile-viewport bottom sheet present;
+- [x] Keyboard: space = reveal next word; prev/next line navigation.
+- [x] Playwright: manifest + offline shell load; mobile-viewport bottom sheet present;
   error toasts render for denied mic and bad key (mocked).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 8: Manual smoke test doc + README
 
-- [ ] Create `docs/manual-smoke-test.md`: exact browser steps with a real key — paste
+- [x] Create `docs/manual-smoke-test.md`: exact browser steps with a real key — paste
   key, ingest a short scene (text + a PDF), pick a role, Start, confirm the partner
   speaks and streams text, confirm a thinking pause does **not** trigger a reply
   (lengthened VAD), confirm wrong words get the strike+box correction, confirm
   Pause/resume and PWA install.
-- [ ] Clearly list which features are covered by automated tests vs. which require a
+- [x] Clearly list which features are covered by automated tests vs. which require a
   real browser + key + mic.
-- [ ] Update `README.md` with setup, the API-key/PAYG note, deploy-to-static-host
+- [x] Update `README.md` with setup, the API-key/PAYG note, deploy-to-static-host
   instructions, and current limitations.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 9: Final review and cleanup
 
-- [ ] Run all Node unit tests and Playwright E2E.
-- [ ] Push the branch and wait for the complete CI workflow; fix every failure and
+- [x] Run all Node unit tests and Playwright E2E.
+- [x] Push the branch and wait for the complete CI workflow; fix every failure and
   actionable warning.
-- [ ] Confirm no backend/server, no login flow, and no secret/API key were added; the
+- [x] Confirm no backend/server, no login flow, and no secret/API key were added; the
   app remains static + client-only with the key in `localStorage`.
-- [ ] Confirm every real Live-API/mic claim is marked as requiring the manual browser
+- [x] Confirm every real Live-API/mic claim is marked as requiring the manual browser
   smoke test.
-- [ ] Write a concise completion report in `docs/agent-progress.md`.
+- [x] Write a concise completion report in `docs/agent-progress.md`.
