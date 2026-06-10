@@ -24,7 +24,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run unit tests
-        run: node --test tests/unit/**/*.test.js
+        run: node --test $(find tests/unit -name '*.test.js' | sort)
 
       - name: Run E2E tests
         run: npx playwright test

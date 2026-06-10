@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "serve": "sirv-cli . --port 9123 --cors --single",
-    "test:unit": "node --test tests/unit/**/*.test.js",
+    "test:unit": "node --test $(find tests/unit -name '*.test.js' | sort)",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && npm run test:e2e"
   },

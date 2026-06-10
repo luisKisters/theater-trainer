@@ -15,7 +15,7 @@ if ! npx playwright --version &>/dev/null; then
 fi
 
 echo "[local-validate] Running Node unit tests..."
-node --test tests/unit/**/*.test.js
+node --test $(find tests/unit -name '*.test.js' | sort)
 
 echo "[local-validate] Running Playwright E2E tests..."
 npx playwright test
