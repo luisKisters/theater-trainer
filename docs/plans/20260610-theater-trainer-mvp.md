@@ -173,15 +173,15 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 4: Audio I/O
 
-- [ ] Build `js/audio-dsp.js` (pure): `floatTo16kBase64`, `base64<->bytes`, and the
+- [x] Build `js/audio-dsp.js` (pure): `floatTo16kBase64`, `base64<->bytes`, and the
   playback scheduling helper. Build `js/audio.js`: `MicCapture` (AudioWorklet →
   downsample → 16 kHz Int16 base64 chunks) and `PcmPlayer` (gapless 24 kHz queue with
   `flush()` for interruptions), behind an `AudioIO` interface; add `MockAudioIO`.
-- [ ] Unit tests for `audio-dsp.js`: resample length/scaling, base64 round-trip,
+- [x] Unit tests for `audio-dsp.js`: resample length/scaling, base64 round-trip,
   schedule-time monotonicity.
-- [ ] Mark real mic capture + playback as "verified only via the manual browser smoke
+- [x] Mark real mic capture + playback as "verified only via the manual browser smoke
   test" (no audio device in CI).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 5: Deterministic matching + teleprompter renderer
 
