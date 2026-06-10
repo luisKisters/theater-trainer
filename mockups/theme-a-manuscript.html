@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theme A — Manuscript</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Spectral:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ecdd; --paper-2:#ece3d0; --ink:#1c1813; --ink-soft:#5c5345;
+    --rule:#cdc1a8; --ok:#2f7d4f; --miss:#b23b2e; --pen:#244a8f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#231f18;color:var(--ink);font-family:"Courier Prime",monospace;
+    padding:40px 16px;}
+  .gallery{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+  .label{color:#b9ad92;font-family:"Courier Prime";font-size:12px;letter-spacing:.25em;
+    text-transform:uppercase;margin:0 0 8px 4px}
+  .screen{background:var(--paper);border-radius:2px;box-shadow:0 1px 0 #fff6 inset,0 18px 40px #0007;
+    padding:34px 38px;position:relative;
+    background-image:linear-gradient(var(--paper),var(--paper));}
+  .screen::before{content:"";position:absolute;left:54px;top:0;bottom:0;width:1px;background:#d8a99e88}
+  h1,h2,h3{font-family:"Spectral",serif;margin:0}
+  .title-block{text-align:center;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
+  .title-block h1{font-size:26px;letter-spacing:.04em}
+  .title-block .by{color:var(--ink-soft);font-size:13px;margin-top:6px}
+  .tabs{display:flex;gap:18px;justify-content:center;font-size:13px;margin-top:12px}
+  .tabs span{padding-bottom:3px;color:var(--ink-soft)}
+  .tabs .on{color:var(--ink);border-bottom:2px solid var(--ink);font-weight:700}
+
+  /* library */
+  .cards{display:flex;flex-direction:column;gap:0}
+  .card-row{display:flex;justify-content:space-between;align-items:baseline;
+    padding:16px 4px;border-bottom:1px dashed var(--rule);cursor:pointer}
+  .card-row h3{font-size:19px}
+  .card-row .meta{color:var(--ink-soft);font-size:12.5px;margin-top:3px}
+  .card-row .go{font-family:"Spectral";font-style:italic;color:var(--pen)}
+  .stamp{display:inline-block;border:2px solid var(--miss);color:var(--miss);
+    transform:rotate(-6deg);padding:2px 8px;border-radius:3px;font-size:11px;letter-spacing:.15em}
+
+  /* add */
+  .field{margin:18px 0}
+  .field label{display:block;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+  .field .box{border:1px solid var(--ink);background:repeating-linear-gradient(var(--paper),var(--paper) 27px,var(--rule) 28px);
+    min-height:92px;border-radius:2px;padding:6px 10px;color:var(--ink-soft);font-size:14px}
+  .uploads{display:flex;gap:12px}
+  .uploads .u{flex:1;border:1.5px dashed var(--ink);border-radius:2px;text-align:center;padding:18px 6px;font-size:13px}
+  .pen-btn{display:inline-block;margin-top:8px;background:var(--ink);color:var(--paper);
+    font-family:"Spectral";font-size:16px;padding:11px 22px;border-radius:2px}
+
+  /* rehearse */
+  .scene{font-family:"Spectral",serif}
+  .cue{margin:16px 0}
+  .cue .name{text-align:center;letter-spacing:.2em;font-family:"Courier Prime";font-size:13px;color:var(--ink-soft)}
+  .cue .text{font-size:18px;line-height:1.7;margin:2px auto 0;max-width:62%}
+  .cue.me .text{max-width:62%}
+  .me-line{background:#fff7e6;border-left:3px solid var(--ink);padding:12px 16px;margin:18px 0;border-radius:2px}
+  .me-line .name{text-align:left}
+  .w-ok{color:var(--ok)}
+  .w-miss{color:var(--miss);text-decoration:underline wavy var(--miss)}
+  .note{font-family:"Courier Prime";font-size:13px;color:var(--pen);
+    border-left:3px solid var(--pen);padding:8px 12px;margin:10px 0 10px 30px;background:#eef2fb}
+  .note b{font-style:normal}
+  .mic-bar{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:24px;
+    border-top:1px solid var(--rule);padding-top:18px}
+  .mic{width:54px;height:54px;border-radius:50%;background:var(--miss);color:#fff;display:grid;place-items:center;font-size:22px}
+  .mic-bar .status{font-family:"Courier Prime";font-size:13px;color:var(--ink-soft)}
+
+  /* settings */
+  .set-field{margin:16px 0}
+  .set-field label{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft)}
+  .set-field .val{border-bottom:1px solid var(--ink);padding:6px 2px;font-size:14px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <div>
+    <p class="label">Theme A · Manuscript — Screen: Library</p>
+    <div class="screen">
+      <div class="title-block">
+        <h1>Theater Trainer</h1>
+        <div class="by">— a rehearsal companion —</div>
+        <div class="tabs"><span class="on">Library</span><span>Add script</span><span>Settings</span></div>
+      </div>
+      <div class="cards">
+        <div class="card-row">
+          <div><h3>Der Besuch der alten Dame</h3>
+            <div class="meta">Friedrich Dürrenmatt · 4 roles · 212 lines · last run as <i>Ill</i></div></div>
+          <div class="go">rehearse →</div>
+        </div>
+        <div class="card-row">
+          <div><h3>Romeo und Julia · Akt 2</h3>
+            <div class="meta">Shakespeare · 2 roles · 58 lines</div></div>
+          <div class="go">rehearse →</div>
+        </div>
+        <div class="card-row">
+          <div><h3>Mein Monolog <span class="stamp">draft</span></h3>
+            <div class="meta">pasted text · 1 role · 9 lines</div></div>
+          <div class="go">rehearse →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme A · Manuscript — Screen: Add script</p>
+    <div class="screen">
+      <div class="title-block"><h1>New Script</h1>
+        <div class="tabs"><span>Library</span><span class="on">Add script</span><span>Settings</span></div></div>
+      <div class="field"><label>Paste the text</label>
+        <div class="box">ANNA: Wo warst du gestern Nacht?<br>BEN: Das geht dich nichts an …</div></div>
+      <div class="field"><label>…or hand it a document</label>
+        <div class="uploads">
+          <div class="u">📄<br>PDF</div>
+          <div class="u">🖼️<br>Images</div>
+          <div class="u">📷<br>Photograph the page</div>
+        </div>
+      </div>
+      <div style="text-align:center"><span class="pen-btn">Set the stage ✒</span></div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme A · Manuscript — Screen: Rehearse</p>
+    <div class="screen">
+      <div class="title-block"><h1>Der Besuch der alten Dame</h1>
+        <div class="by">you play — ILL · Act I</div></div>
+      <div class="scene">
+        <div class="cue"><div class="name">CLAIRE</div>
+          <div class="text">Ich habe gewartet, Alfred. Mein ganzes Leben lang.</div></div>
+
+        <div class="me-line"><div class="name">ILL — your line</div>
+          <div class="text">
+            <span class="w-ok">Klara,</span> <span class="w-ok">das</span>
+            <span class="w-miss">ist</span> <span class="w-ok">doch</span>
+            <span class="w-ok">alles</span> <span class="w-miss">vorbei,</span>
+            <span class="w-ok">längst</span> <span class="w-ok">verjährt.</span>
+          </div></div>
+        <div class="note"><b>director:</b> you said “ist” — the line is <i>“das war doch alles vorbei.”</i></div>
+
+        <div class="cue"><div class="name">CLAIRE</div>
+          <div class="text">Nichts ist vorbei. Nichts vergisst sich.</div></div>
+      </div>
+      <div class="mic-bar"><div class="mic">●</div><div class="status">listening… speak your line</div></div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme A · Manuscript — Screen: Settings</p>
+    <div class="screen">
+      <div class="title-block"><h1>Settings</h1>
+        <div class="tabs"><span>Library</span><span>Add script</span><span class="on">Settings</span></div></div>
+      <div class="set-field"><label>Gemini API key</label><div class="val">•••••••••••••••••••• AIza</div></div>
+      <div class="set-field"><label>Scene-partner voice</label><div class="val">Puck</div></div>
+      <div class="set-field"><label>Correct my mistakes</label><div class="val">after each line ✓</div></div>
+      <div style="text-align:center;margin-top:18px"><span class="pen-btn">Save</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

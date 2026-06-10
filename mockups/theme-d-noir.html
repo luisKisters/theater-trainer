@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theme D — Stage Noir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0a0b; --panel:#141113; --edge:#2a2426;
+    --fg:#ece6df; --dim:#8a8079; --gold:#c8a45c;
+    --ok:#79d59a; --miss:#e0736a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#000;color:var(--fg);font-family:"Inter",sans-serif;padding:38px 16px}
+  .gallery{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+  .label{color:#6f6660;font-size:11px;letter-spacing:.3em;text-transform:uppercase;margin:0 0 10px 2px}
+  .screen{background:var(--bg);border:1px solid var(--edge);border-radius:16px;overflow:hidden;
+    background-image:radial-gradient(120% 80% at 50% -10%, #221a18 0%, var(--bg) 55%)}
+  .top{display:flex;justify-content:space-between;align-items:center;padding:20px 26px}
+  .top .brand{font-family:"Playfair Display";font-style:italic;font-size:19px;letter-spacing:.01em}
+  .top .brand span{color:var(--gold)}
+  .top nav{display:flex;gap:20px;font-size:12px;letter-spacing:.1em;color:var(--dim)}
+  .top nav .on{color:var(--gold)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--edge) 20%,var(--edge) 80%,transparent)}
+  .pad{padding:24px 26px 30px}
+
+  /* library */
+  .shelf{display:flex;flex-direction:column;gap:14px}
+  .play{display:flex;justify-content:space-between;align-items:center;gap:16px;
+    border:1px solid var(--edge);border-radius:12px;padding:20px 22px;
+    background:linear-gradient(180deg,#17131500,#0000),#131012}
+  .play:hover{border-color:var(--gold)}
+  .play .ti{font-family:"Playfair Display";font-size:22px}
+  .play .me{color:var(--dim);font-size:13px;margin-top:6px;letter-spacing:.02em}
+  .play .me em{color:var(--gold);font-style:normal}
+  .play .enter{font-family:"Playfair Display";font-style:italic;color:var(--gold);font-size:15px;white-space:nowrap}
+  .addrow{margin-top:18px;text-align:center}
+  .ghost{display:inline-block;border:1px solid var(--edge);color:var(--dim);border-radius:10px;
+    padding:12px 22px;font-size:13px;letter-spacing:.12em}
+
+  /* add */
+  .lead{font-family:"Playfair Display";font-size:22px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13.5px;margin:0 0 20px}
+  .choices{display:flex;gap:12px;margin-bottom:16px}
+  .choices .c{flex:1;border:1px solid var(--edge);border-radius:10px;padding:18px 8px;text-align:center;font-size:13px;color:var(--dim)}
+  .choices .c .ic{display:block;font-size:20px;margin-bottom:7px;color:var(--gold)}
+  .ta{border:1px solid var(--edge);border-radius:10px;background:#0e0c0d;min-height:120px;padding:14px;color:var(--dim);font-size:14px;line-height:1.6}
+  .gold-btn{display:block;text-align:center;margin-top:18px;background:var(--gold);color:#1c1407;
+    font-family:"Inter";font-weight:500;font-size:15px;padding:14px;border-radius:10px;letter-spacing:.02em}
+
+  /* rehearse — spotlight */
+  .spot{position:relative;text-align:center;padding:46px 26px 34px;
+    background:radial-gradient(70% 120% at 50% 0%, #2c211a 0%, transparent 60%)}
+  .partner{color:var(--dim);font-size:12px;letter-spacing:.24em;text-transform:uppercase;margin-bottom:12px}
+  .partner-line{font-family:"Playfair Display";font-style:italic;font-size:22px;color:#d8cfc6;line-height:1.5;max-width:88%;margin:0 auto 34px}
+  .cue{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+  .line{font-family:"Playfair Display";font-size:34px;line-height:1.32}
+  .line .ok{color:var(--ok)} .line .miss{color:var(--miss);font-style:italic}
+  .whisper{margin:28px auto 0;max-width:78%;font-size:13.5px;color:var(--dim);
+    border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:12px 0}
+  .whisper b{color:var(--gold);font-weight:500}
+  .controls{display:flex;align-items:center;justify-content:center;gap:22px;padding:22px}
+  .mic{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e8b96a,#b8893f);
+    box-shadow:0 0 26px #c8a45c55}
+  .controls .txt{color:var(--dim);font-size:13px;letter-spacing:.06em}
+  .controls .end{color:var(--miss);font-size:13px;letter-spacing:.1em;border:1px solid #4a2a28;padding:10px 16px;border-radius:10px}
+
+  /* settings */
+  .sr{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid var(--edge)}
+  .sr:last-child{border:0}
+  .sr .k{font-size:14.5px}
+  .sr .k .d{color:var(--dim);font-size:12.5px;margin-top:2px}
+  .sr .v{font-family:"Playfair Display";font-style:italic;color:var(--gold);font-size:15px}
+  .sw{width:46px;height:25px;border-radius:20px;background:var(--gold);position:relative}
+  .sw::after{content:"";position:absolute;width:19px;height:19px;border-radius:50%;background:#1c1407;top:3px;right:3px}
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <div>
+    <p class="label">Theme D · Stage Noir — Library</p>
+    <div class="screen">
+      <div class="top"><div class="brand">Theater <span>Trainer</span></div>
+        <nav><span class="on">Repertoire</span><span>Add</span><span>Settings</span></nav></div>
+      <div class="rule"></div>
+      <div class="pad">
+        <div class="shelf">
+          <div class="play"><div><div class="ti">Der Besuch der alten Dame</div>
+            <div class="me">Dürrenmatt · you play <em>Ill</em> · 212 lines</div></div><div class="enter">enter scene →</div></div>
+          <div class="play"><div><div class="ti">Romeo und Julia</div>
+            <div class="me">Shakespeare · Akt 2 · 58 lines</div></div><div class="enter">enter scene →</div></div>
+        </div>
+        <div class="addrow"><span class="ghost">+ Add a script</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme D · Stage Noir — Add script</p>
+    <div class="screen">
+      <div class="top"><div class="brand">Theater <span>Trainer</span></div>
+        <nav><span>Repertoire</span><span class="on">Add</span><span>Settings</span></nav></div>
+      <div class="rule"></div>
+      <div class="pad">
+        <p class="lead">A new script</p>
+        <p class="sub">Paste it, drop a PDF, or photograph the pages — the lines and roles are read out automatically.</p>
+        <div class="choices">
+          <div class="c"><span class="ic">⤓</span>PDF / images</div>
+          <div class="c"><span class="ic">◫</span>Photograph</div>
+        </div>
+        <div class="ta">ANNA: Wo warst du gestern Nacht?<br>BEN: Das geht dich nichts an.</div>
+        <span class="gold-btn">Set the scene</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme D · Stage Noir — Rehearse (spotlight)</p>
+    <div class="screen">
+      <div class="top"><div class="brand" style="font-size:15px">Der Besuch der alten Dame</div>
+        <nav><span class="on">Akt I · Ill</span></nav></div>
+      <div class="rule"></div>
+      <div class="spot">
+        <div class="partner">Claire</div>
+        <div class="partner-line">„Ich habe gewartet, Alfred. Mein ganzes Leben lang.”</div>
+        <div class="cue">your line</div>
+        <div class="line"><span class="ok">Klara, das</span> <span class="miss">ist</span> <span class="ok">doch alles vorbei.</span></div>
+        <div class="whisper">Almost — the line is „das <b>war</b> doch alles vorbei.”</div>
+      </div>
+      <div class="rule"></div>
+      <div class="controls"><span class="end">end</span><div class="mic"></div><span class="txt">listening…</span></div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme D · Stage Noir — Settings</p>
+    <div class="screen">
+      <div class="top"><div class="brand">Theater <span>Trainer</span></div>
+        <nav><span>Repertoire</span><span>Add</span><span class="on">Settings</span></nav></div>
+      <div class="rule"></div>
+      <div class="pad">
+        <div class="sr"><div class="k">Gemini API key<div class="d">Kept in this browser only</div></div><div class="v">•••• AIza</div></div>
+        <div class="sr"><div class="k">Scene-partner voice</div><div class="v">Aoede</div></div>
+        <div class="sr"><div class="k">Correct me after each line</div><div class="sw"></div></div>
+        <div class="sr"><div class="k">Color my words green / red</div><div class="sw"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

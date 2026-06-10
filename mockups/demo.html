@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theater Trainer — interactive demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000; --panel:#0a0a0a; --line:#1a1a1a;
+    --white:#ffffff; --context:#6a6a6a; --partner:#c9c9c9;
+    --hint:#8c8c8c; --hidden:#2b2b2b;
+    --amber:#ffb000; --ok:#27e07a; --miss:#ff453a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:#000;color:var(--white);font-family:"Archivo",sans-serif;
+    display:flex;flex-direction:column;height:100dvh}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 20px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  .topbar .t{font-weight:700;font-size:14px;letter-spacing:.02em}
+  .topbar .t span{color:var(--context);font-weight:400}
+  .status{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--context);display:flex;align-items:center;gap:8px}
+  .status .dot{width:9px;height:9px;border-radius:50%;background:var(--context)}
+  .status.you .dot{background:var(--amber);box-shadow:0 0 0 4px #ffb00022}
+  .status.you{color:var(--amber)}
+  .status.partner .dot{background:var(--ok);animation:pulse 1.1s infinite}
+  .status.partner{color:var(--ok)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* scene scroller */
+  .scene{flex:1 1 auto;overflow-y:auto;padding:8vh 20px 8vh;scroll-behavior:smooth}
+  .scene-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  .line .who{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--context);margin-bottom:6px}
+  .line .body{font-size:20px;line-height:1.6}
+
+  /* context (past + partner) lines */
+  .line.context .body{color:var(--context)}
+  .line.partner.active .who{color:var(--ok)}
+  .line.partner.active .body{color:var(--partner);font-size:23px}
+  .line.partner.active .body::after{content:"▍";color:var(--ok);margin-left:1px;animation:blink 1s steps(1) infinite}
+  .line.partner.active.done .body::after{content:""}
+  @keyframes blink{50%{opacity:0}}
+  .line.future .body{color:var(--hidden)}
+  .line.future .who{color:#3a3a3a}
+
+  /* your active line */
+  .line.mine.active .who{color:var(--amber)}
+  .line.mine.active .body{font-size:30px;font-weight:700;line-height:1.4;letter-spacing:-.01em}
+  .w{transition:color .12s}
+  .w.hidden{color:var(--hidden);letter-spacing:.05em}
+  .w.hint{color:var(--hint)}                 /* revealed by SPACE, not yet said */
+  .w.said{color:var(--white)}                /* you said it correctly */
+  .w.cur{text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:7px;text-decoration-thickness:2px}
+  s.wrong{color:var(--miss);text-decoration:line-through;text-decoration-thickness:2px}
+  .fix{color:var(--ok);border:1.5px solid var(--ok);border-radius:6px;padding:0 7px;margin-left:5px}
+
+  /* your past lines */
+  .line.mine.context .body{color:#9a9a9a;font-size:18px}
+  .line.mine.context .w.said{color:#cfcfcf}
+
+  /* control bar */
+  .controls{flex:0 0 auto;border-top:1px solid var(--line);padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    background:#070707}
+  .controls-inner{max-width:680px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .mic{width:46px;height:46px;border-radius:50%;background:var(--miss);box-shadow:0 0 0 5px #ff453a22;flex:0 0 auto}
+  .mic.idle{background:#333;box-shadow:none}
+  .btn{appearance:none;border:1px solid var(--line);background:#111;color:var(--white);font:inherit;font-size:14px;
+    padding:11px 15px;border-radius:10px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+  .btn:hover:not(:disabled){border-color:var(--amber)}
+  .btn:disabled{opacity:.32;cursor:not-allowed}
+  .btn.primary{background:var(--amber);color:#000;border-color:var(--amber);font-weight:700}
+  .btn.primary .k{border-color:#0006;color:#000}
+  .btn.accent{border-color:var(--amber);color:var(--amber)}
+  .btn.ok{border-color:#1f5c39}
+  .btn.bad{border-color:#5c2420}
+  .btn .k{font-family:"JetBrains Mono";font-size:11px;border:1px solid #444;border-radius:5px;padding:0 5px}
+  .spacer{flex:1 1 auto}
+  .handle{display:none}
+
+  /* ---- mobile: controls become a bottom sheet ---- */
+  @media (max-width:640px){
+    .controls{border-radius:20px 20px 0 0;border-top:1px solid #262626;
+      box-shadow:0 -10px 30px #000a;padding-top:8px}
+    .handle{display:block;width:42px;height:4px;border-radius:3px;background:#3a3a3a;margin:0 auto 12px}
+    .controls-inner{gap:8px}
+    .spacer{display:none}
+    .btn{justify-content:center}
+    #btn-space{order:0;flex:0 0 100%;padding:17px;font-size:17px}
+    #btn-say{order:1;flex:1 1 0}
+    #btn-slip{order:2;flex:1 1 0}
+    #btn-line{order:3;flex:1 1 0}
+    #mic{order:4;width:42px;height:42px}
+    #btn-auto{order:5;flex:1 1 auto}
+    #btn-reset{order:6;flex:0 0 auto}
+    .line.mine.active .body{font-size:25px}
+    .line.partner.active .body{font-size:21px}
+    .scene{padding:5vh 16px 4vh}
+  }
+  .hint-row{max-width:680px;margin:8px auto 0;color:var(--context);font-size:12px;text-align:center}
+  .hint-row b{color:var(--amber);font-weight:500}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="t">Der Besuch der alten Dame <span>· Akt I · you play Ill</span></div>
+    <div class="status" id="status"><span class="dot"></span><span id="status-txt">ready</span></div>
+  </div>
+
+  <div class="scene" id="scene"><div class="scene-inner" id="scene-inner"></div></div>
+
+  <div class="controls">
+    <div class="handle"></div>
+    <div class="controls-inner">
+      <button class="btn primary" id="btn-space" disabled><span class="k">space</span> Reveal next word</button>
+      <button class="btn ok" id="btn-say" disabled>Say word ✓</button>
+      <button class="btn bad" id="btn-slip" disabled>Slip ✗</button>
+      <button class="btn" id="btn-line" disabled>Whole line ⏎</button>
+      <div class="mic idle" id="mic"></div>
+      <button class="btn accent" id="btn-auto">▶ Auto-play scene</button>
+      <span class="spacer"></span>
+      <button class="btn" id="btn-reset">↺ Restart</button>
+    </div>
+    <div class="hint-row" id="hint-row">
+      This is a mock — it doesn't use your mic. On <b>your</b> lines, peek with <b>space</b>, or use the buttons to simulate speaking. The wrong-word fixes are the same deterministic diff the real app will run on your live transcript.
+    </div>
+  </div>
+
+<script>
+// ---- the scene -------------------------------------------------------------
+// mine:true  -> your line (Ill). mistakes: {wordIndex: "what you actually say"}.
+// mine:false -> partner line (Claire), auto-performed.
+const SCRIPT = [
+  {who:'Claire', mine:false, text:'Ich habe gewartet, Alfred. Mein ganzes Leben lang habe ich auf diesen Augenblick gewartet.'},
+  {who:'Ill',    mine:true,  text:'Klara, das war doch alles vorbei, längst verjährt und vergessen.', mistakes:{2:'ist'}},
+  {who:'Claire', mine:false, text:'Nichts ist vorbei. Nichts vergisst sich, wenn man nur lange genug wartet.'},
+  {who:'Ill',    mine:true,  text:'Du bist die reichste Frau der Welt geworden, sagt man im Städtchen.', mistakes:{2:'reiche'}},
+  {who:'Claire', mine:false, text:'Reich genug, um mir endlich die Gerechtigkeit zu kaufen, die man mir verweigert hat.'},
+  {who:'Ill',    mine:true,  text:'Gerechtigkeit? Nach all den Jahren willst du mich noch immer richten?'},
+  {who:'Claire', mine:false, text:'Ich will nur, was mir gehört. Eine alte Schuld, mit Zinsen und Zinseszins.'},
+  {who:'Ill',    mine:true,  text:'Ich war jung und dumm. Ich habe einen einzigen Fehler gemacht.', mistakes:{6:'einzelnen'}},
+  {who:'Claire', mine:false, text:'Ein Fehler, der mein ganzes Leben zerstört hat, Alfred. Ein einziger.'},
+  {who:'Ill',    mine:true,  text:'Und nun kommst du zurück, um die ganze Stadt gegen mich aufzubringen.'},
+  {who:'Claire', mine:false, text:'Die Stadt wird sich selbst entscheiden. Ich biete nur an. Mehr nicht.'},
+  {who:'Ill',    mine:true,  text:'Eine Milliarde für meinen Tod. Das ist kein Angebot, das ist ein Urteil.', mistakes:{1:'Million'}},
+  {who:'Claire', mine:false, text:'Nenn es, wie du willst. Ich habe Zeit. Ich hatte immer Zeit.'},
+  {who:'Ill',    mine:true,  text:'Und wenn ich dich anflehe? Wenn ich um Gnade bitte, Klara?'},
+  {who:'Claire', mine:false, text:'Dann werde ich dir zuhören. So gut, wie du mir einst zugehört hast.'},
+];
+
+// ---- state -----------------------------------------------------------------
+let i = 0;            // active line index
+let wordPtr = 0;      // next word to "say" in the active mine line
+let revealedTo = 0;   // words peeked via space (>= wordPtr)
+let auto = false;
+let timer = null;
+
+const sceneInner = document.getElementById('scene-inner');
+const statusEl = document.getElementById('status');
+const statusTxt = document.getElementById('status-txt');
+const mic = document.getElementById('mic');
+const btnSpace = document.getElementById('btn-space');
+const btnSay = document.getElementById('btn-say');
+const btnSlip = document.getElementById('btn-slip');
+const btnLine = document.getElementById('btn-line');
+const btnAuto = document.getElementById('btn-auto');
+
+const words = (line) => line.text.split(' ');
+
+function lineClasses(idx){
+  const l = SCRIPT[idx];
+  let c = 'line ' + (l.mine ? 'mine ' : 'partner ');
+  if (idx < i) c += 'context ';
+  else if (idx === i) c += 'active ';
+  else c += 'future ';
+  return c.trim();
+}
+
+function renderMineActive(l){
+  return words(l).map((w, idx) => {
+    const cur = idx === wordPtr ? ' cur' : '';
+    if (idx < wordPtr){
+      const wrong = l.mistakes && l.mistakes[idx];
+      return wrong
+        ? `<s class="wrong">${l.mistakes[idx]}</s><span class="fix">${w}</span>`
+        : `<span class="w said">${w}</span>`;
+    }
+    if (idx < revealedTo) return `<span class="w hint${cur}">${w}</span>`;
+    return `<span class="w hidden${cur}">${'▁'.repeat(Math.max(2, w.replace(/[.,!?]/g,'').length))}</span>`;
+  }).join(' ');
+}
+
+function renderMineContext(l){
+  return words(l).map((w, idx) => {
+    const wrong = l.mistakes && l.mistakes[idx];
+    return wrong
+      ? `<s class="wrong">${l.mistakes[idx]}</s><span class="fix">${w}</span>`
+      : `<span class="w said">${w}</span>`;
+  }).join(' ');
+}
+
+let partnerShown = 0; // words revealed of the active partner line
+function renderPartnerActive(l){
+  const ws = words(l);
+  return ws.slice(0, partnerShown).join(' ');
+}
+
+function render(){
+  sceneInner.innerHTML = SCRIPT.map((l, idx) => {
+    let body;
+    if (idx === i && l.mine) body = renderMineActive(l);
+    else if (idx === i && !l.mine) body = renderPartnerActive(l);
+    else if (idx < i && l.mine) body = renderMineContext(l);
+    else if (idx < i) body = l.text;                 // past partner line
+    else body = l.mine ? '▁▁▁▁  ▁▁▁  ▁▁▁▁▁' : '▁▁▁▁  ▁▁▁▁▁▁  ▁▁▁'; // future
+    const done = idx === i && !l.mine && partnerShown >= words(l).length ? ' done' : '';
+    return `<div class="${lineClasses(idx)}${done}" data-idx="${idx}">
+      <div class="who">${l.who}</div><div class="body">${body}</div></div>`;
+  }).join('');
+  const activeEl = sceneInner.querySelector('.active');
+  if (activeEl) activeEl.scrollIntoView({block:'center'});
+  updateControls();
+}
+
+function updateControls(){
+  const done = i >= SCRIPT.length;
+  const mine = !done && SCRIPT[i].mine;
+  const ws = done ? [] : words(SCRIPT[i]);
+  const lineLeft = mine && wordPtr < ws.length;
+
+  if (done){ setStatus('idle', 'scene complete'); mic.className = 'mic idle'; }
+  else if (mine){ setStatus('you', 'your line — speak'); mic.className = 'mic'; }
+  else { setStatus('partner', SCRIPT[i].who + ' is speaking'); mic.className = 'mic idle'; }
+
+  // peeking only useful while there are hidden words ahead
+  btnSpace.disabled = auto || !mine || revealedTo >= ws.length;
+  btnSay.disabled  = auto || !lineLeft;
+  btnSlip.disabled = auto || !lineLeft;
+  btnLine.disabled = auto || !mine;
+  btnAuto.textContent = auto ? '⏸ Pause' : (done ? '↺ Replay scene' : '▶ Auto-play scene');
+}
+
+function setStatus(kind, txt){ statusEl.className = 'status ' + kind; statusTxt.textContent = txt; }
+
+// ---- your-line actions -----------------------------------------------------
+function peek(){
+  const ws = words(SCRIPT[i]);
+  if (revealedTo < ws.length){ revealedTo++; render(); }
+}
+function sayWord(forceSlip){
+  const l = SCRIPT[i], ws = words(l);
+  if (wordPtr >= ws.length) return;
+  // a scripted mistake fires as a slip unless the user forces a clean "say"
+  if (forceSlip && !(l.mistakes && l.mistakes[wordPtr])){
+    l.mistakes = l.mistakes || {}; l.mistakes[wordPtr] = mangle(ws[wordPtr]);
+  }
+  wordPtr++;
+  if (wordPtr > revealedTo) revealedTo = wordPtr;
+  render();
+}
+function mangle(w){ return w.replace(/[aeiouäöü]/i, 'e').replace(/[.,!?]/g,''); }
+function sayWholeLine(){
+  const ws = words(SCRIPT[i]);
+  wordPtr = ws.length; revealedTo = ws.length; render();
+  setTimeout(advance, 450);
+}
+function advance(){
+  i++; wordPtr = 0; revealedTo = 0; partnerShown = 0; render();
+}
+
+btnSpace.onclick = peek;
+btnSay.onclick = () => { sayWord(false); maybeAutoAdvance(); };
+btnSlip.onclick = () => { sayWord(true); maybeAutoAdvance(); };
+btnLine.onclick = sayWholeLine;
+function maybeAutoAdvance(){
+  if (SCRIPT[i] && wordPtr >= words(SCRIPT[i]).length) setTimeout(advance, 500);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space'){ e.preventDefault(); if (!btnSpace.disabled) peek(); }
+  if (e.key === 'Enter'){ if (!btnLine.disabled) sayWholeLine(); }
+});
+
+// ---- auto-play -------------------------------------------------------------
+btnAuto.onclick = () => {
+  if (i >= SCRIPT.length){ reset(); }
+  auto = !auto;
+  if (auto) tick(); else { clearTimeout(timer); }
+  updateControls();
+};
+
+function tick(){
+  if (!auto) return;
+  if (i >= SCRIPT.length){ auto = false; updateControls(); return; }
+  const l = SCRIPT[i], ws = words(l);
+  if (!l.mine){
+    if (partnerShown < ws.length){ partnerShown++; render(); timer = setTimeout(tick, 170); }
+    else { timer = setTimeout(()=>{ advance(); tick(); }, 650); }
+  } else {
+    if (wordPtr < ws.length){
+      // peek a moment before "saying", honoring scripted mistakes
+      if (revealedTo <= wordPtr) revealedTo = wordPtr + 1;
+      render();
+      timer = setTimeout(()=>{ wordPtr++; if(wordPtr>revealedTo) revealedTo=wordPtr; render(); tick(); }, 230);
+    } else {
+      timer = setTimeout(()=>{ advance(); tick(); }, 700);
+    }
+  }
+}
+
+// ---- reset -----------------------------------------------------------------
+function reset(){
+  clearTimeout(timer); auto = false;
+  i = 0; wordPtr = 0; revealedTo = 0; partnerShown = 0;
+  // restore scripted mistakes that user-forced slips may have added
+  SCRIPT.forEach((l, idx) => { if (l.mine) l.mistakes = ORIGINAL[idx]; });
+  render();
+}
+const ORIGINAL = SCRIPT.map(l => l.mistakes ? {...l.mistakes} : (l.mine ? {} : undefined));
+document.getElementById('btn-reset').onclick = reset;
+
+render();
+</script>
+</body>
+</html>

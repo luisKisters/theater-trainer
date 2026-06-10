@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theater Trainer — UI mockups</title>
+<style>
+  body{margin:0;background:#1a1a1a;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:48px 20px}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 6px}
+  p.sub{color:#999;margin:0 0 30px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  a.card{display:block;text-decoration:none;color:#eee;border:1px solid #333;border-radius:12px;padding:20px;background:#222}
+  a.card:hover{border-color:#c8a45c}
+  a.card h2{margin:0 0 6px;font-size:17px}
+  a.card span{color:#999;font-size:13px}
+  .open{display:block;margin-top:14px;color:#c8a45c;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎭 Theater Trainer — UI mockups</h1>
+  <p class="sub">Four theme directions. Each file shows all four screens (Library · Add · Rehearse · Settings) with the same sample scene. Static mockups only — nothing works yet.</p>
+  <a class="card" href="demo.html" style="grid-column:1/-1;border-color:#27e07a"><h2>▶ Interactive demo ★</h2><span>A working mock of the rehearsal flow (no mic): partner lines auto-play, your lines start hidden/gray, space reveals hints, words turn white as you "say" them, wrong words show the deterministic strike-through + boxed fix. Full ~15-line scene.</span><span class="open" style="color:#27e07a">Open the demo →</span></a>
+  <div class="grid" style="margin-top:16px">
+    <a class="card" href="theme-a-manuscript.html"><h2>A · Manuscript</h2><span>Cream paper, typewriter + serif. Feels like a printed playscript with director's notes in the margin.</span><span class="open">Open →</span></a>
+    <a class="card" href="theme-b-teleprompter.html"><h2>B · Teleprompter</h2><span>Pure black, huge type, amber accent. Rehearse screen is a giant, distance-readable prompter.</span><span class="open">Open →</span></a>
+    <a class="card" href="theme-b-teleprompter-variations.html" style="border-color:#ffb000"><h2>B+ · Teleprompter variations ★</h2><span>4 prompter layouts with the new model: space-to-reveal hints + deterministic inline word correction (strike-through + boxed fix).</span><span class="open">Open →</span></a>
+    <a class="card" href="theme-c-editorial.html"><h2>C · Swiss Editorial</h2><span>White, grid, signal-red accent, numbered index. Crisp and designy, two-column rehearse.</span><span class="open">Open →</span></a>
+    <a class="card" href="theme-d-noir.html"><h2>D · Stage Noir</h2><span>Charcoal + gold, Playfair serif, spotlight on the current line. Theatrical but restrained.</span><span class="open">Open →</span></a>
+  </div>
+</div>
+</body>
+</html>

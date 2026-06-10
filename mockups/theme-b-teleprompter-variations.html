@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Teleprompter — variations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000; --panel:#0a0a0a; --line:#171717;
+    --fg:#f5f5f5; --dim:#5f5f5f; --ghost:#8a8a8a;
+    --amber:#ffb000; --ok:#27e07a; --miss:#ff453a; --fix:#27e07a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#000;color:var(--fg);font-family:"Archivo",sans-serif;padding:34px 16px}
+  .gallery{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+  .label{color:var(--dim);font-size:11px;letter-spacing:.32em;text-transform:uppercase;margin:0 0 10px 2px}
+  .legend{background:#0c0c0c;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:14px;line-height:1.7;color:#cfcfcf}
+  .legend b{color:var(--amber)}
+  .legend .ex{font-family:"JetBrains Mono";font-size:13px;color:#bbb}
+  .key{display:inline-block;border:1px solid #333;border-bottom-width:2px;border-radius:6px;padding:1px 8px;font-family:"JetBrains Mono";font-size:12px;color:#ddd}
+
+  .screen{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line);
+    color:var(--dim);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  .topbar .live{color:var(--ok)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--miss);margin-right:7px;vertical-align:middle}
+
+  /* shared word states */
+  .said{color:var(--fg)}                       /* a word you already said correctly (stays neutral) */
+  .ghost{color:var(--ghost)}                   /* revealed by SPACE as a hint — you still must say it */
+  .ghost.cur{color:#bdbdbd;text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:6px}
+  .hid{color:#2c2c2c;letter-spacing:.06em}     /* not yet revealed — placeholder dashes */
+  s.miss{color:var(--miss);text-decoration:line-through;text-decoration-thickness:2px}
+  .fix{color:var(--fix);border:1.5px solid var(--fix);border-radius:6px;padding:0 7px;margin-left:4px}
+
+  /* ---- B1 Monolith ---- */
+  .b1{padding:46px 28px 30px;text-align:center}
+  .b1 .partner{color:var(--dim);font-size:13px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px}
+  .b1 .pline{color:#bdbdbd;font-weight:400;font-size:19px;max-width:84%;margin:0 auto 30px}
+  .b1 .cue{color:var(--amber);font-size:11px;letter-spacing:.32em;text-transform:uppercase;margin-bottom:14px}
+  .b1 .line{font-weight:900;font-size:40px;line-height:1.22;letter-spacing:-.015em}
+  .b1 .foot{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:34px}
+  .b1 .mic{width:58px;height:58px;border-radius:50%;background:var(--miss);box-shadow:0 0 0 6px #ff453a22}
+  .b1 .hintkey{color:var(--dim);font-size:13px}
+
+  /* ---- B2 Karaoke ---- */
+  .b2{padding:30px 26px}
+  .b2 .you{color:var(--amber);font-size:11px;letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px}
+  .b2 .line{font-weight:700;font-size:32px;line-height:1.5}
+  .b2 .prog{height:4px;background:#1c1c1c;border-radius:4px;margin-top:26px;overflow:hidden}
+  .b2 .prog i{display:block;height:100%;width:44%;background:var(--amber)}
+  .b2 .bar{display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:var(--dim);font-size:13px}
+
+  /* ---- B3 Dual stream ---- */
+  .b3 .partner-pane{padding:26px;border-bottom:1px solid var(--line);background:#070707}
+  .b3 .tag{color:var(--dim);font-size:11px;letter-spacing:.24em;text-transform:uppercase;margin-bottom:10px}
+  .b3 .streaming{font-size:22px;color:#d6d6d6;line-height:1.5}
+  .b3 .streaming::after{content:"▍";color:var(--amber);animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .b3 .your-pane{padding:30px 26px}
+  .b3 .tag.you{color:var(--amber)}
+  .b3 .line{font-weight:800;font-size:34px;line-height:1.3}
+  .b3 .foot{display:flex;align-items:center;gap:16px;margin-top:24px;color:var(--dim);font-size:13px}
+  .b3 .mic{width:44px;height:44px;border-radius:50%;background:var(--miss)}
+
+  /* ---- B4 Focus card (mono) ---- */
+  .b4{padding:30px 26px;font-family:"JetBrains Mono",monospace}
+  .b4 .meta{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-bottom:18px}
+  .b4 .card{border:1px solid #242424;border-radius:14px;padding:30px 26px;background:#070707;text-align:center}
+  .b4 .cue{color:var(--amber);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:18px}
+  .b4 .line{font-weight:500;font-size:30px;line-height:1.5}
+  .b4 .reveal{margin-top:24px;color:var(--dim);font-size:13px}
+  .b4 .reveal .key{margin:0 4px}
+  .b4 .counter{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <div class="legend">
+    <b>How the prompter behaves</b> — same scene in every variation below.<br>
+    • Your line starts <span class="hid">▁▁▁▁ ▁▁▁</span> hidden. Tap <span class="key">space</span> to reveal the next word as a faint hint —
+      <span class="ghost">like this</span> — you still have to <i>say</i> it; the hint never counts as spoken.<br>
+    • When you finish the line, a local word-diff marks anything wrong: <span class="ex"><s class="miss">ist</s> <span class="fix">war</span></span>
+      — your word struck out, the correct word boxed next to it. Deterministic, computed on-device, no AI judging.<br>
+    • No verbal "you got it wrong" interruptions. The AI partner just keeps performing the scene.
+  </div>
+
+  <!-- B1 -->
+  <div>
+    <p class="label">Variation B1 · Monolith — one giant centered line</p>
+    <div class="screen">
+      <div class="topbar"><span>Der Besuch der alten Dame · Akt I</span><span class="live"><span class="dot"></span>Live · you = Ill</span></div>
+      <div class="b1">
+        <div class="partner">Claire</div>
+        <div class="pline">„Ich habe gewartet, Alfred. Mein ganzes Leben lang.”</div>
+        <div class="cue">your line</div>
+        <div class="line">
+          <span class="said">Klara,</span> <span class="said">das</span>
+          <s class="miss">ist</s> <span class="fix">war</span>
+          <span class="ghost">doch</span> <span class="ghost cur">alles</span>
+          <span class="hid">▁▁▁▁▁▁</span>
+        </div>
+        <div class="foot"><div class="mic"></div><div class="hintkey"><span class="key">space</span> reveals the next word</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B2 -->
+  <div>
+    <p class="label">Variation B2 · Karaoke — progress underline, line-length bar</p>
+    <div class="screen">
+      <div class="topbar"><span>Der Besuch der alten Dame</span><span class="live"><span class="dot"></span>Listening</span></div>
+      <div class="b2">
+        <div class="you">Ill — your line</div>
+        <div class="line">
+          <span class="said">Klara,</span> <span class="said">das</span>
+          <s class="miss">ist</s> <span class="fix">war</span>
+          <span class="said">doch</span> <span class="ghost cur">alles</span>
+          <span class="hid">▁▁▁▁</span> <span class="hid">▁▁▁▁▁▁</span>
+        </div>
+        <div class="prog"><i></i></div>
+        <div class="bar"><span>4 / 7 words said</span><span><span class="key">space</span> hint &nbsp;·&nbsp; ⏸ pause</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B3 -->
+  <div>
+    <p class="label">Variation B3 · Dual stream — partner's words stream in on top, your prompt below</p>
+    <div class="screen">
+      <div class="topbar"><span>Der Besuch der alten Dame · Akt I</span><span class="live"><span class="dot"></span>Live</span></div>
+      <div class="b3">
+        <div class="partner-pane">
+          <div class="tag">Claire · speaking</div>
+          <div class="streaming">Ich habe gewartet, Alfred. Mein ganzes Leben</div>
+        </div>
+        <div class="your-pane">
+          <div class="tag you">You · Ill — next</div>
+          <div class="line">
+            <span class="said">Klara,</span> <span class="said">das</span>
+            <s class="miss">ist</s> <span class="fix">war</span>
+            <span class="ghost cur">doch</span> <span class="hid">▁▁▁▁▁</span> <span class="hid">▁▁▁▁▁▁</span>
+          </div>
+          <div class="foot"><div class="mic"></div><span><span class="key">space</span> reveal next word · words you got wrong are fixed inline</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4 -->
+  <div>
+    <p class="label">Variation B4 · Focus card — monospace, explicit reveal counter</p>
+    <div class="screen">
+      <div class="b4">
+        <div class="meta"><span>der_besuch · akt_I</span><span>role: ILL &nbsp; ● rec</span></div>
+        <div class="card">
+          <div class="cue">your line</div>
+          <div class="line">
+            <span class="said">Klara,</span> <span class="said">das</span>
+            <s class="miss">ist</s> <span class="fix">war</span>
+            <span class="ghost">doch</span> <span class="ghost cur">alles</span>
+            <span class="hid">______</span> <span class="hid">________</span>
+          </div>
+          <div class="reveal">
+            <span class="key">space</span> next word
+            &nbsp;·&nbsp; revealed <span class="counter">4 / 7</span>
+            &nbsp;·&nbsp; <span class="key">←</span> resync
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

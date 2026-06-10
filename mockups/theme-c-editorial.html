@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theme C — Swiss Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff; --ink:#111111; --soft:#737373; --rule:#e4e4e4;
+    --red:#e5261f; --ok:#0a8f4f; --miss:#e5261f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#d8d8d8;color:var(--ink);font-family:"Inter",sans-serif;padding:40px 16px}
+  .gallery{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+  .label{color:#7a7a7a;font-size:11px;letter-spacing:.22em;text-transform:uppercase;margin:0 0 10px 2px}
+  .screen{background:var(--paper);padding:0;border-radius:4px;overflow:hidden;box-shadow:0 10px 30px #0002}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;padding:24px 28px 16px;border-bottom:2px solid var(--ink)}
+  .head .mark{font-family:"Space Grotesk";font-weight:700;font-size:18px;letter-spacing:-.02em}
+  .head .mark sup{color:var(--red)}
+  .head nav{display:flex;gap:16px;font-size:12px;color:var(--soft)}
+  .head nav .on{color:var(--ink);font-weight:600}
+  .pad{padding:24px 28px 30px}
+  h2.kicker{font-family:"Space Grotesk";font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin:0 0 14px}
+
+  /* library: an editorial index/table */
+  .index .it{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:baseline;
+    padding:18px 0;border-bottom:1px solid var(--rule)}
+  .index .it:first-child{border-top:1px solid var(--rule)}
+  .index .num{font-family:"Space Grotesk";color:var(--red);font-size:13px}
+  .index .ti{font-family:"Space Grotesk";font-weight:500;font-size:21px;letter-spacing:-.01em}
+  .index .su{color:var(--soft);font-size:13px;margin-top:4px}
+  .index .act{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:2px}
+  .newbtn{margin-top:22px;display:inline-block;background:var(--ink);color:#fff;font-size:13px;
+    letter-spacing:.12em;text-transform:uppercase;padding:13px 20px;border-radius:2px}
+
+  /* add */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .drop{border:1px solid var(--ink);border-radius:3px;padding:22px;text-align:center;font-size:13px}
+  .drop .ic{font-size:22px;display:block;margin-bottom:8px}
+  .area{border:1px solid var(--rule);background:#fafafa;border-radius:3px;min-height:140px;padding:14px;
+    color:var(--soft);font-size:14px;line-height:1.6;font-family:"Inter"}
+  .submit{margin-top:18px;width:100%;background:var(--red);color:#fff;border:0;font-family:"Inter";
+    font-weight:600;font-size:15px;padding:15px;border-radius:3px;letter-spacing:.02em}
+
+  /* rehearse: two-column editorial */
+  .reh-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .reh-left{padding:24px 24px 24px 28px;border-right:1px solid var(--rule)}
+  .reh-right{padding:24px 28px 24px 24px;background:#fafafa}
+  .yourrole{font-family:"Space Grotesk";font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+  .prompt{font-family:"Space Grotesk";font-weight:500;font-size:26px;line-height:1.4;letter-spacing:-.01em}
+  .prompt .ok{color:var(--ok)} .prompt .miss{color:var(--miss);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .corr{margin-top:18px;border-left:3px solid var(--red);padding:6px 0 6px 12px;font-size:13.5px;color:#444}
+  .corr b{color:var(--red)}
+  .transcript .t{margin-bottom:16px}
+  .transcript .who{font-family:"Space Grotesk";font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin-bottom:3px}
+  .transcript .me .who{color:var(--red)}
+  .transcript .said{font-size:14.5px;line-height:1.55}
+  .footer{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;border-top:2px solid var(--ink)}
+  .footer .st{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:middle}
+  .footer .stop{font-size:12px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--ink);padding:9px 16px;border-radius:2px}
+
+  /* settings */
+  .srow{display:grid;grid-template-columns:1fr auto;gap:10px;padding:16px 0;border-bottom:1px solid var(--rule);align-items:center}
+  .srow .k{font-size:14px}
+  .srow .sub{color:var(--soft);font-size:12.5px;margin-top:2px}
+  .srow .v{font-family:"Space Grotesk";font-size:14px}
+  .chk{width:42px;height:24px;border:1px solid var(--ink);border-radius:2px;position:relative}
+  .chk::after{content:"";position:absolute;inset:3px auto 3px 3px;width:16px;height:16px;background:var(--red)}
+  .chk.on::after{left:auto;right:3px}
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <div>
+    <p class="label">Theme C · Swiss Editorial — Library</p>
+    <div class="screen">
+      <div class="head"><div class="mark">Theater Trainer<sup>®</sup></div>
+        <nav><span class="on">Library</span><span>Add</span><span>Settings</span></nav></div>
+      <div class="pad">
+        <h2 class="kicker">Your repertoire — 03 scripts</h2>
+        <div class="index">
+          <div class="it"><div class="num">01</div>
+            <div><div class="ti">Der Besuch der alten Dame</div><div class="su">Dürrenmatt · role: Ill · 212 lines</div></div>
+            <div class="act">Rehearse</div></div>
+          <div class="it"><div class="num">02</div>
+            <div><div class="ti">Romeo und Julia</div><div class="su">Shakespeare · Akt 2 · 58 lines</div></div>
+            <div class="act">Rehearse</div></div>
+          <div class="it"><div class="num">03</div>
+            <div><div class="ti">Mein Monolog</div><div class="su">pasted text · 9 lines</div></div>
+            <div class="act">Rehearse</div></div>
+        </div>
+        <span class="newbtn">+ New script</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme C · Swiss Editorial — Add script</p>
+    <div class="screen">
+      <div class="head"><div class="mark">Theater Trainer<sup>®</sup></div>
+        <nav><span>Library</span><span class="on">Add</span><span>Settings</span></nav></div>
+      <div class="pad">
+        <h2 class="kicker">Import — paste, upload, or photograph</h2>
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="drop"><span class="ic">⤓</span>PDF or images</div>
+          <div class="drop"><span class="ic">⊡</span>Photograph page</div>
+        </div>
+        <div class="area">ANNA: Wo warst du gestern Nacht?<br>BEN: Das geht dich nichts an.<br>ANNA: Ich habe dich gesehen, Ben.</div>
+        <button class="submit">Process script →</button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme C · Swiss Editorial — Rehearse</p>
+    <div class="screen">
+      <div class="head"><div class="mark">Der Besuch der alten Dame</div>
+        <nav><span>Akt I</span><span class="on">Ill</span></nav></div>
+      <div class="reh-grid">
+        <div class="reh-left">
+          <div class="yourrole">Your line — Ill</div>
+          <div class="prompt"><span class="ok">Klara, das</span> <span class="miss">ist</span> <span class="ok">doch alles vorbei.</span></div>
+          <div class="corr"><b>Correction.</b> The text reads „das <b>war</b> doch alles vorbei.” You said „ist”.</div>
+        </div>
+        <div class="reh-right">
+          <h2 class="kicker">Transcript</h2>
+          <div class="transcript">
+            <div class="t"><div class="who">Claire</div><div class="said">Ich habe gewartet, Alfred. Mein ganzes Leben lang.</div></div>
+            <div class="t me"><div class="who">You · Ill</div><div class="said">Klara, das ist doch alles vorbei.</div></div>
+            <div class="t"><div class="who">Claire</div><div class="said">Nichts ist vorbei. Nichts vergisst sich.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span class="st"><span class="dot"></span>Listening</span><span class="stop">End session</span></div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Theme C · Swiss Editorial — Settings</p>
+    <div class="screen">
+      <div class="head"><div class="mark">Theater Trainer<sup>®</sup></div>
+        <nav><span>Library</span><span>Add</span><span class="on">Settings</span></nav></div>
+      <div class="pad">
+        <div class="srow"><div><div class="k">Gemini API key</div><div class="sub">Stored in this browser only</div></div><div class="v">•••• AIza</div></div>
+        <div class="srow"><div><div class="k">Scene-partner voice</div></div><div class="v">Kore ▾</div></div>
+        <div class="srow"><div><div class="k">Correct mistakes after each line</div></div><div class="chk on"></div></div>
+        <div class="srow"><div><div class="k">Color words green / red</div></div><div class="chk on"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
