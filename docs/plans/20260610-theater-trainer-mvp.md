@@ -156,20 +156,20 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 3: Script ingestion and library
 
-- [ ] Build `js/script-schema.js`: response schema, `buildIngestParts({text, files})`,
+- [x] Build `js/script-schema.js`: response schema, `buildIngestParts({text, files})`,
   `validateScript()` (requires title, language, characters, ≥1 line).
-- [ ] Define the `ScriptProcessor` interface; implement `MockProcessor` (fixture) and
+- [x] Define the `ScriptProcessor` interface; implement `MockProcessor` (fixture) and
   `GeminiProcessor` (`generateContent` with `responseMimeType: application/json` +
   `responseSchema`, files as `inlineData`; PDFs/images read natively, no client OCR).
-- [ ] Build the Add view: paste textarea, file upload (PDF/images), camera capture
+- [x] Build the Add view: paste textarea, file upload (PDF/images), camera capture
   (`capture="environment"`), a processing state, and error handling.
-- [ ] Build the Library view: list saved scripts (title, author/source, role, line
+- [x] Build the Library view: list saved scripts (title, author/source, role, line
   count), open, delete (with confirm), and a **role picker** dialog.
-- [ ] Unit tests: schema parts builder, `validateScript` accept/reject, `fileToBase64`,
+- [x] Unit tests: schema parts builder, `validateScript` accept/reject, `fileToBase64`,
   `MockProcessor` output validates.
-- [ ] Playwright (MockProcessor via test seam): paste text → process → script appears in
+- [x] Playwright (MockProcessor via test seam): paste text → process → script appears in
   Library → pick a role → land on Rehearse.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 4: Audio I/O
 

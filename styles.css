@@ -335,6 +335,53 @@ s.wrong {
   .scene { padding: 5vh 16px 4vh; }
 }
 
+/* ---- add status ---- */
+.add-status {
+  margin-top: 12px;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: none;
+}
+.add-status:not(:empty) { display: block; }
+.add-status.ok { color: var(--ok); border: 1px solid #1f5c39; }
+.add-status.error { color: var(--miss); border: 1px solid #5c2420; }
+.add-status.processing { color: var(--amber); border: 1px solid #5c3e00; }
+
+/* ---- role picker dialog ---- */
+.dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.dialog.hidden { display: none; }
+.dialog-content {
+  background: var(--panel);
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 28px;
+  width: min(90vw, 400px);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.role-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* ---- rehearse header ---- */
+.rehearse-header { margin-bottom: 8px; }
+.rehearse-header h1 { margin-bottom: 4px; }
+.rehearse-role { color: var(--context); font-size: 14px; margin: 0 0 16px; }
+.rehearse-role-name { color: var(--amber); }
+
 /* ---- slider ---- */
 .slider-row {
   display: flex;

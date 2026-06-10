@@ -7,6 +7,7 @@ const DEFAULTS = {
   voice: 'Puck',
   waitMs: 3500,
   showCorrections: true,
+  currentScriptId: null,
 };
 
 function load() {

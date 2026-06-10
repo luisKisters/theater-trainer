@@ -1,8 +1,10 @@
 import { load, save } from './store.js';
+import { loadScripts, addScript, deleteScript, updateScript } from './scripts-store.js';
+import { validateScript } from './script-schema.js';
+import { fileToBase64 } from './script-processor.js';
 
 const VIEWS = ['library', 'add', 'rehearse', 'settings'];
-// These views depend on runtime state and must re-render on every navigation.
-const DYNAMIC_VIEWS = new Set(['rehearse', 'settings']);
+const DYNAMIC_VIEWS = new Set(['library', 'rehearse', 'settings']);
 
 const VOICES = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Perseus'];
 
@@ -12,10 +14,91 @@ function getView() {
 }
 
 function renderLibrary(el) {
+  const scripts = loadScripts();
+
+  if (scripts.length === 0) {
+    el.innerHTML = `
+      <h1>Script Library</h1>
+      <div class="empty-state">
+        <div class="icon">📄</div>
+        <p>No scripts yet. Add one to get started.</p>
+        <button class="btn accent" onclick="location.hash='add'">Add Script</button>
+      </div>
+    `;
+    return;
+  }
+
+  const cards = scripts.map(s => {
+    const lineCount = s.lines?.length || 0;
+    const roleName = s.characters?.find(c => c.id === s.selectedRole)?.name || 'No role selected';
+    return `
+      <div class="script-card">
+        <div class="info">
+          <div class="title">${escHtml(s.title)}</div>
+          <div class="meta">${escHtml(s.author || 'Unknown')} · ${lineCount} lines · ${escHtml(s.language || '')} · ${escHtml(roleName)}</div>
+        </div>
+        <button class="btn accent btn-open-script" data-script-id="${escHtml(s.id)}">Open</button>
+        <button class="btn btn-delete-script" data-script-id="${escHtml(s.id)}">Delete</button>
+      </div>
+    `;
+  }).join('');
+
   el.innerHTML = `
     <h1>Script Library</h1>
-    <div id="library-list"></div>
+    <div id="library-list">${cards}</div>
+    <div id="role-picker-dialog" class="dialog hidden" role="dialog" aria-modal="true" aria-label="Pick Your Role">
+      <div class="dialog-content">
+        <h2>Pick Your Role</h2>
+        <div id="role-picker-list"></div>
+        <button class="btn" id="btn-close-role-picker">Cancel</button>
+      </div>
+    </div>
   `;
+
+  el.addEventListener('click', e => {
+    const openBtn = e.target.closest('.btn-open-script');
+    if (openBtn) {
+      showRolePicker(el, openBtn.dataset.scriptId);
+      return;
+    }
+
+    const delBtn = e.target.closest('.btn-delete-script');
+    if (delBtn) {
+      if (confirm('Delete this script?')) {
+        deleteScript(delBtn.dataset.scriptId);
+        renderLibrary(el);
+      }
+    }
+  });
+}
+
+function showRolePicker(el, scriptId) {
+  const script = loadScripts().find(s => s.id === scriptId);
+  if (!script) return;
+
+  const dialog = el.querySelector('#role-picker-dialog');
+  const list = el.querySelector('#role-picker-list');
+
+  list.innerHTML = script.characters.map(c => `
+    <button class="btn role-btn" data-role-id="${escHtml(c.id)}" data-script-id="${escHtml(scriptId)}">
+      ${escHtml(c.name)}
+    </button>
+  `).join('');
+
+  dialog.classList.remove('hidden');
+
+  list.querySelectorAll('.role-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      updateScript(btn.dataset.scriptId, { selectedRole: btn.dataset.roleId });
+      save({ ...load(), currentScriptId: btn.dataset.scriptId });
+      dialog.classList.add('hidden');
+      location.hash = 'rehearse';
+    });
+  });
+
+  dialog.querySelector('#btn-close-role-picker')?.addEventListener('click', () => {
+    dialog.classList.add('hidden');
+  });
 }
 
 function renderAdd(el) {
@@ -34,8 +117,68 @@ function renderAdd(el) {
       <input class="form-input" type="file" id="camera-input" accept="image/*" capture="environment" />
     </div>
     <button class="btn primary" id="btn-process">Process Script</button>
-    <div id="add-status"></div>
+    <div id="add-status" class="add-status"></div>
   `;
+
+  const btn = el.querySelector('#btn-process');
+  const statusEl = el.querySelector('#add-status');
+
+  btn.addEventListener('click', async () => {
+    const text = el.querySelector('#paste-input').value.trim();
+    const fileInput = el.querySelector('#file-input');
+    const cameraInput = el.querySelector('#camera-input');
+    const allFiles = [
+      ...Array.from(fileInput.files || []),
+      ...Array.from(cameraInput.files || []),
+    ];
+
+    if (!text && allFiles.length === 0) {
+      setStatus(statusEl, 'Please paste text or upload a file.', 'error');
+      return;
+    }
+
+    let processor;
+    if (window.__TT_BACKENDS__?.scriptProcessor) {
+      processor = window.__TT_BACKENDS__.scriptProcessor;
+    } else {
+      const state = load();
+      if (!state.apiKey) {
+        setStatus(statusEl, 'An API key is required. Add one in Settings.', 'error');
+        return;
+      }
+      const { GeminiProcessor } = await import('./gemini-processor.js');
+      processor = new GeminiProcessor(state.apiKey, state.textModel);
+    }
+
+    btn.disabled = true;
+    setStatus(statusEl, 'Processing script…', 'processing');
+
+    try {
+      const files = await Promise.all(
+        allFiles.map(async f => ({ mimeType: f.type, data: await fileToBase64(f) }))
+      );
+
+      const result = await processor.process({ text, files });
+
+      if (!validateScript(result)) {
+        throw new Error('Invalid script structure returned by processor');
+      }
+
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      addScript({ id, ...result, selectedRole: null, addedAt: new Date().toISOString() });
+
+      setStatus(statusEl, 'Script added!', 'ok');
+      setTimeout(() => { location.hash = 'library'; }, 600);
+    } catch (err) {
+      setStatus(statusEl, `Error: ${err.message}`, 'error');
+      btn.disabled = false;
+    }
+  });
+}
+
+function setStatus(el, msg, type) {
+  el.textContent = msg;
+  el.className = `add-status ${type}`;
 }
 
 function renderRehearse(el) {
@@ -50,11 +193,50 @@ function renderRehearse(el) {
     `;
     return;
   }
+
+  if (!state.currentScriptId) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎭</div>
+        <p>No script selected. Go to Library to pick one.</p>
+        <button class="btn accent" onclick="location.hash='library'">Go to Library</button>
+      </div>
+    `;
+    return;
+  }
+
+  const scripts = loadScripts();
+  const script = scripts.find(s => s.id === state.currentScriptId);
+  if (!script || !script.selectedRole) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎭</div>
+        <p>Script not found or no role selected.</p>
+        <button class="btn accent" onclick="location.hash='library'">Back to Library</button>
+      </div>
+    `;
+    return;
+  }
+
+  const role = script.characters.find(c => c.id === script.selectedRole);
   el.innerHTML = `
-    <div class="empty-state">
-      <div class="icon">🎭</div>
-      <p>No script selected. Go to Library to pick one.</p>
-      <button class="btn accent" onclick="location.hash='library'">Go to Library</button>
+    <div class="rehearse-header">
+      <h1>${escHtml(script.title)}</h1>
+      <p class="rehearse-role">You are playing <strong class="rehearse-role-name">${escHtml(role?.name || script.selectedRole)}</strong></p>
+    </div>
+    <div class="scene" id="scene">
+      <div class="scene-inner" id="scene-inner">
+        <p style="color:var(--context);font-size:14px;">Rehearsal engine coming in Task 6. Script has ${script.lines.length} lines.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="handle"></div>
+      <div class="controls-inner">
+        <button class="btn primary" id="btn-start">Start</button>
+        <button class="btn" id="btn-pause" disabled>Pause</button>
+        <div class="spacer"></div>
+        <button class="btn" onclick="location.hash='library'">← Library</button>
+      </div>
     </div>
   `;
 }
@@ -170,22 +352,18 @@ function showToast(msg, type = '') {
   setTimeout(() => t.remove(), 2800);
 }
 
-// Nav tab clicks
 document.getElementById('nav-tabs').addEventListener('click', e => {
   const tab = e.target.closest('.nav-tab');
   if (!tab) return;
   location.hash = tab.dataset.view;
 });
 
-// Hash-based routing
 window.addEventListener('hashchange', () => navigate(getView()));
 
-// Service worker registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
 
-// Initial render
 navigate(getView());
