@@ -242,11 +242,11 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 9: Final review and cleanup
 
-- [ ] Run all Node unit tests and Playwright E2E.
-- [ ] Push the branch and wait for the complete CI workflow; fix every failure and
+- [x] Run all Node unit tests and Playwright E2E.
+- [x] Push the branch and wait for the complete CI workflow; fix every failure and
   actionable warning.
-- [ ] Confirm no backend/server, no login flow, and no secret/API key were added; the
+- [x] Confirm no backend/server, no login flow, and no secret/API key were added; the
   app remains static + client-only with the key in `localStorage`.
-- [ ] Confirm every real Live-API/mic claim is marked as requiring the manual browser
+- [x] Confirm every real Live-API/mic claim is marked as requiring the manual browser
   smoke test.
-- [ ] Write a concise completion report in `docs/agent-progress.md`.
+- [x] Write a concise completion report in `docs/agent-progress.md`.
