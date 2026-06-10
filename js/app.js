@@ -2,8 +2,10 @@ import { load, save } from './store.js';
 import { loadScripts, addScript, deleteScript, updateScript } from './scripts-store.js';
 import { validateScript } from './script-schema.js';
 import { fileToBase64 } from './script-processor.js';
+import { createTeleprompter } from './teleprompter.js';
 
 const VIEWS = ['library', 'add', 'rehearse', 'settings'];
+let _rehearseCleanup = null;
 const DYNAMIC_VIEWS = new Set(['library', 'rehearse', 'settings']);
 
 const VOICES = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Perseus'];
@@ -182,6 +184,8 @@ function setStatus(el, msg, type) {
 }
 
 function renderRehearse(el) {
+  if (_rehearseCleanup) { _rehearseCleanup(); _rehearseCleanup = null; }
+
   const state = load();
   if (!state.apiKey) {
     el.innerHTML = `
@@ -225,20 +229,50 @@ function renderRehearse(el) {
       <p class="rehearse-role">You are playing <strong class="rehearse-role-name">${escHtml(role?.name || script.selectedRole)}</strong></p>
     </div>
     <div class="scene" id="scene">
-      <div class="scene-inner" id="scene-inner">
-        <p style="color:var(--context);font-size:14px;">Rehearsal engine coming in Task 6. Script has ${script.lines.length} lines.</p>
-      </div>
+      <div class="scene-inner" id="scene-inner"></div>
     </div>
     <div class="controls">
       <div class="handle"></div>
       <div class="controls-inner">
         <button class="btn primary" id="btn-start">Start</button>
         <button class="btn" id="btn-pause" disabled>Pause</button>
+        <button class="btn" id="btn-prev-line">← Prev</button>
+        <button class="btn" id="btn-next-line">Next →</button>
         <div class="spacer"></div>
         <button class="btn" onclick="location.hash='library'">← Library</button>
       </div>
     </div>
   `;
+
+  const sceneInner = el.querySelector('#scene-inner');
+  const tp = createTeleprompter(sceneInner, script, script.selectedRole);
+
+  const onKeyDown = (e) => {
+    if (e.code === 'Space' && tp.isUserTurn()) {
+      e.preventDefault();
+      tp.peek();
+    }
+  };
+  document.addEventListener('keydown', onKeyDown);
+
+  el.querySelector('#btn-prev-line').addEventListener('click', () => tp.prevLine());
+  el.querySelector('#btn-next-line').addEventListener('click', () => tp.nextLine());
+
+  // Expose for Playwright E2E tests
+  window.__TT_TEST__ = {
+    tp,
+    finalizeTurn: (text) => tp.finalizeTurn(text),
+    restart: () => tp.restart(),
+    nextLine: () => tp.nextLine(),
+    prevLine: () => tp.prevLine(),
+    getState: () => tp.getState(),
+    streamPartnerWord: () => tp.streamPartnerWord(),
+  };
+
+  _rehearseCleanup = () => {
+    document.removeEventListener('keydown', onKeyDown);
+    window.__TT_TEST__ = null;
+  };
 }
 
 function renderSettings(el) {

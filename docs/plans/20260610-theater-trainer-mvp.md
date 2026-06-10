@@ -185,17 +185,17 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 5: Deterministic matching + teleprompter renderer
 
-- [ ] Finalize `js/match.js` (LCS alignment, tolerance for punctuation/umlauts/≤1 edit
+- [x] Finalize `js/match.js` (LCS alignment, tolerance for punctuation/umlauts/≤1 edit
   on long words).
-- [ ] Build `js/teleprompter.js`: render the scrolling scene — gray context lines, the
+- [x] Build `js/teleprompter.js`: render the scrolling scene — gray context lines, the
   active partner line streaming in, the user's line hidden→hint→white per word, the
   current-word underline, and strike-through + boxed corrections; auto-scroll the
   active line into view. Reuse the demo's word-state CSS.
-- [ ] Unit tests for `match.js`: exact match, missing word, extra word, substitution,
+- [x] Unit tests for `match.js`: exact match, missing word, extra word, substitution,
   reordering, punctuation/umlaut tolerance, empty input.
-- [ ] Playwright: drive the renderer from fixtures (no Live) through hidden → space-peek
+- [x] Playwright: drive the renderer from fixtures (no Live) through hidden → space-peek
   → said → wrong-word states and assert the DOM/classes.
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 6: Live rehearsal engine
 
