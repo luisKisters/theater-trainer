@@ -235,8 +235,9 @@ function renderRehearse(el) {
     <div class="controls">
       <div class="handle"></div>
       <div class="controls-inner">
-        <button class="btn primary" id="btn-start">Start</button>
-        <button class="btn" id="btn-pause" disabled>Pause</button>
+        <button class="btn primary" id="btn-reveal-word" disabled><span class="k">space</span> Reveal next word</button>
+        <button class="btn accent" id="btn-start">▶ Start</button>
+        <button class="btn" id="btn-pause" disabled>⏸ Pause</button>
         <button class="btn" id="btn-prev-line">← Prev</button>
         <button class="btn" id="btn-next-line">Next →</button>
         <div class="spacer"></div>
@@ -249,13 +250,21 @@ function renderRehearse(el) {
   const tp = createTeleprompter(sceneInner, script, script.selectedRole);
 
   const onKeyDown = (e) => {
-    if (e.code === 'Space' && tp.isUserTurn()) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') {
       e.preventDefault();
       tp.peek();
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      tp.prevLine();
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      tp.nextLine();
     }
   };
   document.addEventListener('keydown', onKeyDown);
 
+  el.querySelector('#btn-reveal-word').addEventListener('click', () => tp.peek());
   el.querySelector('#btn-prev-line').addEventListener('click', () => tp.prevLine());
   el.querySelector('#btn-next-line').addEventListener('click', () => tp.nextLine());
 
@@ -267,6 +276,7 @@ function renderRehearse(el) {
 
   const startBtn = el.querySelector('#btn-start');
   const pauseBtn = el.querySelector('#btn-pause');
+  const revealBtn = el.querySelector('#btn-reveal-word');
 
   const noopAudio = {
     async startMic() {},
@@ -330,6 +340,20 @@ function renderRehearse(el) {
 
     backend.on('interrupted', () => audioIO.flush());
 
+    backend.on('disconnected', () => {
+      if (!backendReady) return;
+      backendReady = false;
+      audioIO?.stopMic?.();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      revealBtn.disabled = true;
+      showToast('Session disconnected. Click Start to reconnect.', 'err');
+    });
+
+    backend.on('error', (err) => {
+      showToast(`Backend error: ${err?.message || String(err)}`, 'err');
+    });
+
     backendReady = true;
   }
 
@@ -339,8 +363,15 @@ function renderRehearse(el) {
       await audioIO.startMic((chunk) => backend.sendAudio(chunk));
       startBtn.disabled = true;
       pauseBtn.disabled = false;
+      revealBtn.disabled = false;
     } catch (err) {
-      showToast(`Connection error: ${err.message}`, 'error');
+      let msg;
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        msg = 'Microphone permission denied. Allow access in your browser and try again.';
+      } else {
+        msg = `Connection error: ${err.message}`;
+      }
+      showToast(msg, 'err');
     }
   });
 
@@ -348,6 +379,7 @@ function renderRehearse(el) {
     audioIO?.stopMic();
     startBtn.disabled = false;
     pauseBtn.disabled = true;
+    revealBtn.disabled = true;
   });
 
   // ── Test seam ──────────────────────────────────────────────────────────────

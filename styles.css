@@ -341,6 +341,7 @@ s.wrong {
   .line.mine.active .body { font-size: 25px; }
   .line.partner.active .body { font-size: 21px; }
   .scene { padding: 5vh 16px 4vh; }
+  #btn-reveal-word { order: 0; flex: 0 0 100%; padding: 17px; font-size: 17px; }
 }
 
 /* ---- add status ---- */

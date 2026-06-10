@@ -218,14 +218,14 @@ load to run the full UI deterministically with zero network/mic/secrets.
 
 ### Task 7: Polish, mobile, and error states
 
-- [ ] Mobile: controls render as a bottom sheet (rounded top, grab handle, **Reveal
+- [x] Mobile: controls render as a bottom sheet (rounded top, grab handle, **Reveal
   next word** as the prominent action) per `mockups/demo.html`; responsive scene type.
-- [ ] Error/empty states: invalid/missing API key, microphone permission denied,
+- [x] Error/empty states: invalid/missing API key, microphone permission denied,
   dropped/closed socket (offer reconnect), ingestion failure, empty Library.
-- [ ] Keyboard: space = reveal next word; prev/next line navigation.
-- [ ] Playwright: manifest + offline shell load; mobile-viewport bottom sheet present;
+- [x] Keyboard: space = reveal next word; prev/next line navigation.
+- [x] Playwright: manifest + offline shell load; mobile-viewport bottom sheet present;
   error toasts render for denied mic and bad key (mocked).
-- [ ] Run the local validation and CI gate until both pass.
+- [x] Run the local validation and CI gate until both pass.
 
 ### Task 8: Manual smoke test doc + README
 
