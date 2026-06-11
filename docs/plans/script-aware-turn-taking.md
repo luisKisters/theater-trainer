@@ -275,24 +275,24 @@ At the end of the final task, after validation and push to main, output exactly:
 
 ### Task 1: Add Pure Line Progress Matching
 
-- [ ] Create `js/line-progress.js` with `normalizeToken`, `filterFillerTokens`, and `analyzeLineProgress`.
-- [ ] Reuse current matching behavior from `js/match.js` where practical without breaking existing `alignWords` callers.
-- [ ] Implement punctuation, case, umlaut, and small edit-distance tolerance.
-- [ ] Implement filler filtering using the locked filler word list.
-- [ ] Implement `matchedRatio`, `lastMatchedIndex`, `finalWordsMatched`, and `isLikelyDone`.
-- [ ] Add `tests/unit/line-progress.test.js`.
-- [ ] Test exact German line matching.
-- [ ] Test punctuation-insensitive matching.
-- [ ] Test umlaut and `ß` normalization.
-- [ ] Test filler words are ignored.
-- [ ] Test "let me think" does not create script mistakes.
-- [ ] Test 85 percent coverage plus final words returns likely done.
-- [ ] Test high coverage without final words does not return likely done.
-- [ ] Test final word plus 90 percent coverage returns likely done.
-- [ ] Test repeated earlier words do not regress progress.
-- [ ] Test wrong final words do not complete the line.
-- [ ] Run `npm run test:unit`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Create `js/line-progress.js` with `normalizeToken`, `filterFillerTokens`, and `analyzeLineProgress`.
+- [x] Reuse current matching behavior from `js/match.js` where practical without breaking existing `alignWords` callers.
+- [x] Implement punctuation, case, umlaut, and small edit-distance tolerance.
+- [x] Implement filler filtering using the locked filler word list.
+- [x] Implement `matchedRatio`, `lastMatchedIndex`, `finalWordsMatched`, and `isLikelyDone`.
+- [x] Add `tests/unit/line-progress.test.js`.
+- [x] Test exact German line matching.
+- [x] Test punctuation-insensitive matching.
+- [x] Test umlaut and `ß` normalization.
+- [x] Test filler words are ignored.
+- [x] Test "let me think" does not create script mistakes.
+- [x] Test 85 percent coverage plus final words returns likely done.
+- [x] Test high coverage without final words does not return likely done.
+- [x] Test final word plus 90 percent coverage returns likely done.
+- [x] Test repeated earlier words do not regress progress.
+- [x] Test wrong final words do not complete the line.
+- [x] Run `npm run test:unit`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 
