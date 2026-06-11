@@ -1,9 +1,11 @@
-const CACHE = 'tt-shell-v1';
+const CACHE = 'tt-shell-v2';
 const SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/js/app.js',
+  '/js/gemini-processor.js',
+  '/js/script-schema.js',
   '/manifest.webmanifest',
   '/icons/icon.svg',
 ];
@@ -27,6 +29,26 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
 
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        if (resp.ok) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -36,7 +58,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return resp;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => caches.match(e.request));
     })
   );
 });

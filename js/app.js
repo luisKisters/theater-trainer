@@ -146,25 +146,24 @@ function renderAdd(el) {
       return;
     }
 
-    let processor;
-    let usesInjectedProcessor = false;
-    if (window.__TT_BACKENDS__?.scriptProcessor) {
-      processor = window.__TT_BACKENDS__.scriptProcessor;
-      usesInjectedProcessor = true;
-    } else {
-      const state = load();
-      if (!state.apiKey) {
-        setStatus(statusEl, 'An API key is required. Add one in Settings.', 'error');
-        return;
-      }
-      const { GeminiProcessor } = await import('./gemini-processor.js');
-      processor = new GeminiProcessor(state.apiKey, state.textModel);
-    }
-
     btn.disabled = true;
     setStatus(statusEl, 'Processing script…', 'processing');
 
     try {
+      let processor;
+      let usesInjectedProcessor = false;
+      if (window.__TT_BACKENDS__?.scriptProcessor) {
+        processor = window.__TT_BACKENDS__.scriptProcessor;
+        usesInjectedProcessor = true;
+      } else {
+        const state = load();
+        if (!state.apiKey) {
+          throw new Error('An API key is required. Add one in Settings.');
+        }
+        const { GeminiProcessor } = await import('./gemini-processor.js');
+        processor = new GeminiProcessor(state.apiKey, state.textModel);
+      }
+
       const files = await Promise.all(
         allFiles.map(async f => ({ mimeType: f.type, data: await fileToBase64(f) }))
       );

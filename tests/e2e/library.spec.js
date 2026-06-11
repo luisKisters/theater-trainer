@@ -135,6 +135,24 @@ test('Gemini text property response processes pasted German script without text 
   await expect(page.locator('#role-picker-dialog')).toContainText('Einstein');
 });
 
+test('add view reports processor module load failures without uncaught promise', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', err => pageErrors.push(err.message));
+
+  await page.route('https://esm.run/@google/genai@latest', route => route.abort('failed'));
+
+  await page.goto('/#settings');
+  await page.fill('#api-key-input', 'test-key-abc');
+  await page.click('#btn-save-settings');
+
+  await page.goto('/#add');
+  await page.fill('#paste-input', 'ALICE: Hello');
+  await page.click('#btn-process');
+
+  await expect(page.locator('#add-status')).toContainText(/Failed to fetch dynamically imported module|error loading dynamically imported module/i);
+  expect(pageErrors).toEqual([]);
+});
+
 test('role picker opens and role can be selected', async ({ page }) => {
   await page.addInitScript(...injectMockProcessor(FIXTURE_SCRIPT));
 
