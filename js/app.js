@@ -234,6 +234,8 @@ function renderRehearse(el) {
   }
 
   const role = script.characters.find(c => c.id === script.selectedRole);
+  const characterName = (line) => script.characters.find(c => c.id === line.character_id)?.name || line.character_id;
+  const lineBelongsToUser = (line) => line?.character_id === script.selectedRole;
   el.innerHTML = `
     <div class="rehearse-header">
       <h1>${escHtml(script.title)}</h1>
@@ -324,6 +326,13 @@ function renderRehearse(el) {
     stop() {},
   };
 
+  function buildPartnerStartCue() {
+    const state = tp.getState();
+    const line = script.lines[state.lineIndex];
+    if (!line || lineBelongsToUser(line)) return '';
+    return `Start the rehearsal now. Speak this current script line exactly once, then stop: ${characterName(line)}: ${line.text}`;
+  }
+
   async function connectBackend() {
     if (backendReady) return;
 
@@ -406,6 +415,8 @@ function renderRehearse(el) {
       pauseBtn.disabled = false;
       revealBtn.disabled = false;
       el.querySelector('#btn-compact').disabled = true;
+      const partnerStartCue = buildPartnerStartCue();
+      if (partnerStartCue) backend.sendText?.(partnerStartCue);
     } catch (err) {
       let msg;
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {

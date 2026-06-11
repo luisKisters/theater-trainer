@@ -108,6 +108,13 @@ export class GeminiLiveBackend extends EventEmitter {
     this._session?.sendRealtimeInput({ audio: { data: base64, mimeType: 'audio/pcm;rate=16000' } });
   }
 
+  sendText(text) {
+    this._session?.sendClientContent({
+      turns: [{ role: 'user', parts: [{ text }] }],
+      turnComplete: true,
+    });
+  }
+
   disconnect() {
     try { this._session?.close(); } catch (_) {}
     this._session = null;
@@ -136,6 +143,8 @@ export class MockLiveBackend extends EventEmitter {
   }
 
   sendAudio() {}
+
+  sendText(text) { this._emit('clientText', { text }); }
 
   triggerInputTranscription(text) { this._emit('inputTranscription', { text }); }
   triggerOutputTranscription(text) { this._emit('outputTranscription', { text }); }

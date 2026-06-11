@@ -34,9 +34,11 @@ function injectMocks(script) {
     const lb = {
       ...makeEmitter(),
       connected: false,
+      sentTexts: [],
       async connect() { this.connected = true; this._emit('connected'); },
       disconnect() { this.connected = false; this._emit('disconnected'); },
       sendAudio() {},
+      sendText(text) { this.sentTexts.push(text); this._emit('clientText', { text }); },
       triggerInputTranscription(text) { this._emit('inputTranscription', { text }); },
       triggerOutputTranscription(text) { this._emit('outputTranscription', { text }); },
       triggerAudio(data) { this._emit('audio', { data: data || 'AAAA' }); },
@@ -105,6 +107,29 @@ test('Start connects backend and enables Pause', async ({ page }) => {
 
   const micStarted = await page.evaluate(() => window.__TT_BACKENDS__.audioIO.micStarted);
   expect(micStarted).toBe(true);
+});
+
+test('Start sends an initial cue when the first active line belongs to the partner', async ({ page }) => {
+  const partnerFirstFixture = {
+    title: 'Partner First Scene',
+    author: 'Test',
+    language: 'en',
+    characters: [
+      { id: 'alice', name: 'Alice' },
+      { id: 'bob', name: 'Bob' },
+    ],
+    lines: [
+      { character_id: 'bob', text: 'Your cue begins now.' },
+      { character_id: 'alice', text: 'I am ready.' },
+    ],
+  };
+
+  await setupRehearseWithLive(page, partnerFirstFixture);
+  await page.click('#btn-start');
+
+  const sentTexts = await page.evaluate(() => window.__TT_BACKENDS__.liveBackend.sentTexts);
+  expect(sentTexts).toHaveLength(1);
+  expect(sentTexts[0]).toContain('Bob: Your cue begins now.');
 });
 
 test('Pause stops mic and re-enables Start', async ({ page }) => {
