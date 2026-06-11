@@ -53,6 +53,39 @@ test('teleprompter initial state: user line words are hidden', async ({ page }) 
   expect(count).toBeGreaterThan(0);
 });
 
+test('teleprompter: active user line shows one blank per actual word', async ({ page }) => {
+  await setupRehearse(page);
+
+  const expectedWords = FIXTURE_SCRIPT.lines[0].text.trim().split(/\s+/);
+  const hiddenWords = page.locator('#scene-inner .line.mine.active .body .w.hidden');
+
+  await expect(hiddenWords).toHaveCount(expectedWords.length);
+});
+
+test('teleprompter: blank lengths correspond to actual script word lengths', async ({ page }) => {
+  await setupRehearse(page);
+
+  const expectedLengths = FIXTURE_SCRIPT.lines[0].text
+    .trim()
+    .split(/\s+/)
+    .map(word => Math.max(2, word.replace(/[^\p{Letter}\p{Number}]/gu, '').length));
+
+  const blankLengths = await page
+    .locator('#scene-inner .line.mine.active .body .w.hidden')
+    .evaluateAll(elements => elements.map(el => Number(el.dataset.wordLength)));
+
+  expect(blankLengths).toEqual(expectedLengths);
+});
+
+test('teleprompter: future lines show one blank per actual word', async ({ page }) => {
+  await setupRehearse(page);
+
+  const expectedWords = FIXTURE_SCRIPT.lines[1].text.trim().split(/\s+/);
+  const futureBlanks = page.locator('#scene-inner .line.partner.future .body .future-blank');
+
+  await expect(futureBlanks).toHaveCount(expectedWords.length);
+});
+
 test('teleprompter: space key reveals first word as hint', async ({ page }) => {
   await setupRehearse(page);
 
@@ -66,6 +99,52 @@ test('teleprompter: space key reveals first word as hint', async ({ page }) => {
   // After space: first word should be hint
   await expect(firstWord).toHaveClass(/hint/);
   await expect(firstWord).not.toHaveClass(/hidden/);
+});
+
+test('teleprompter: live transcript fills matched words before finalization', async ({ page }) => {
+  await setupRehearse(page);
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('Hello Bob how'));
+
+  const body = page.locator('#scene-inner .line.mine.active .body');
+  await expect(body.locator('.w.said')).toHaveText(['Hello', 'Bob', 'how']);
+  await expect(body.locator('.w.hidden')).toHaveCount(3);
+  await expect(body.locator('s.wrong')).toHaveCount(0);
+  await expect(body.locator('.fix')).toHaveCount(0);
+});
+
+test('teleprompter: Heard text updates as transcript changes', async ({ page }) => {
+  await setupRehearse(page);
+
+  await expect(page.locator('#live-transcript')).toContainText('Heard:');
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('Hello Bob'));
+  await expect(page.locator('#live-transcript')).toContainText('Heard: Hello Bob');
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('Hello Bob how are'));
+  await expect(page.locator('#live-transcript')).toContainText('Heard: Hello Bob how are');
+});
+
+test('teleprompter: filler transcript does not fill script words', async ({ page }) => {
+  await setupRehearse(page);
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('um let me think'));
+
+  const body = page.locator('#scene-inner .line.mine.active .body');
+  await expect(body.locator('.w.said')).toHaveCount(0);
+  await expect(body.locator('.w.hidden')).toHaveCount(6);
+  await expect(page.locator('#live-transcript')).toContainText('Heard: um let me think');
+});
+
+test('teleprompter: wrong live words do not show red correction before finalization', async ({ page }) => {
+  await setupRehearse(page);
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('Hello Bob how are you tomorrow.'));
+
+  const body = page.locator('#scene-inner .line.mine.active .body');
+  await expect(body.locator('s.wrong')).toHaveCount(0);
+  await expect(body.locator('.fix')).toHaveCount(0);
+  await expect(body.locator('.w.said')).toHaveText(['Hello', 'Bob', 'how', 'are', 'you']);
+  await expect(body.locator('.w.hidden')).toHaveCount(1);
 });
 
 test('teleprompter: finalizeTurn with exact text marks all words as said', async ({ page }) => {

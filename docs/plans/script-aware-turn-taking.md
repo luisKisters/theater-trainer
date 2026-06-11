@@ -302,23 +302,23 @@ Playwright test is required in this task.
 
 ### Task 2: Render Live Transcript And Word-Length Blanks
 
-- [ ] Update `js/teleprompter.js` to render `#live-transcript` below the active user line.
-- [ ] Add `updateLiveTranscript(text)` to the teleprompter controller.
-- [ ] Use `analyzeLineProgress` to fill matched words live.
-- [ ] Keep wrong words hidden during live speaking; show final corrections only after finalization.
-- [ ] Replace generic future placeholders with one blank span per real script word.
-- [ ] Make each blank length match its actual script word length with a minimum width of 2 characters.
-- [ ] Preserve current partner-line streaming behavior.
-- [ ] Preserve current context-line correction rendering.
-- [ ] Update `tests/e2e/teleprompter.spec.js`.
-- [ ] Test active user line shows one blank per actual word.
-- [ ] Test blank lengths correspond to actual script word lengths.
-- [ ] Test live transcript fills matched words before finalization.
-- [ ] Test `Heard:` text updates as transcript changes.
-- [ ] Test filler transcript does not fill script words.
-- [ ] Test wrong live words do not show red correction before finalization.
-- [ ] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Update `js/teleprompter.js` to render `#live-transcript` below the active user line.
+- [x] Add `updateLiveTranscript(text)` to the teleprompter controller.
+- [x] Use `analyzeLineProgress` to fill matched words live.
+- [x] Keep wrong words hidden during live speaking; show final corrections only after finalization.
+- [x] Replace generic future placeholders with one blank span per real script word.
+- [x] Make each blank length match its actual script word length with a minimum width of 2 characters.
+- [x] Preserve current partner-line streaming behavior.
+- [x] Preserve current context-line correction rendering.
+- [x] Update `tests/e2e/teleprompter.spec.js`.
+- [x] Test active user line shows one blank per actual word.
+- [x] Test blank lengths correspond to actual script word lengths.
+- [x] Test live transcript fills matched words before finalization.
+- [x] Test `Heard:` text updates as transcript changes.
+- [x] Test filler transcript does not fill script words.
+- [x] Test wrong live words do not show red correction before finalization.
+- [x] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 

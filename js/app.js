@@ -444,6 +444,7 @@ function renderRehearse(el) {
     nextLine: () => tp.nextLine(),
     prevLine: () => tp.prevLine(),
     getState: () => tp.getState(),
+    updateLiveTranscript: (text) => tp.updateLiveTranscript(text),
     streamPartnerWord: () => tp.streamPartnerWord(),
     streamPartnerText: (text) => tp.streamPartnerText(text),
     compactToNextUserTurn: (promptLines) => tp.compactToNextUserTurn(promptLines),
