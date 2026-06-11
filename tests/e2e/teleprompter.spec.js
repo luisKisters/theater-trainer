@@ -16,12 +16,48 @@ const FIXTURE_SCRIPT = {
   ],
 };
 
-async function setupRehearse(page) {
+const LONG_FIXTURE_SCRIPT = {
+  title: 'Long Teleprompter Test Scene',
+  author: 'Test',
+  language: 'en',
+  characters: [
+    { id: 'alice', name: 'Alice' },
+    { id: 'bob', name: 'Bob' },
+  ],
+  lines: [
+    { character_id: 'alice', text: 'one two three four five six seven eight nine ten eleven twelve.' },
+    { character_id: 'bob', text: 'Partner line follows.' },
+  ],
+};
+
+async function setupRehearse(page, script = FIXTURE_SCRIPT) {
   await page.addInitScript(([script]) => {
+    function makeEmitter() {
+      const h = {};
+      return {
+        on(e, fn) { (h[e] = h[e] || []).push(fn); },
+        _emit(e, d) { (h[e] || []).slice().forEach(fn => fn(d)); },
+      };
+    }
+
     window.__TT_BACKENDS__ = {
       scriptProcessor: { process: async () => JSON.parse(JSON.stringify(script)) },
+      liveBackend: {
+        ...makeEmitter(),
+        async connect() { this._emit('connected'); },
+        disconnect() { this._emit('disconnected'); },
+        sendAudio() {},
+        sendText() {},
+      },
+      audioIO: {
+        async startMic() {},
+        stopMic() {},
+        play() {},
+        flush() {},
+        stop() {},
+      },
     };
-  }, [FIXTURE_SCRIPT]);
+  }, [script]);
 
   // Set API key so Rehearse is not blocked
   await page.goto('/#settings');
@@ -42,6 +78,11 @@ async function setupRehearse(page) {
 
   // Wait for teleprompter controller to be exposed
   await page.waitForFunction(() => window.__TT_TEST__ !== null && window.__TT_TEST__ !== undefined, { timeout: 5000 });
+}
+
+async function startRehearsal(page) {
+  await page.click('#btn-start');
+  await expect(page.locator('#btn-reveal-word')).toBeEnabled();
 }
 
 test('teleprompter initial state: user line words are hidden', async ({ page }) => {
@@ -99,6 +140,66 @@ test('teleprompter: space key reveals first word as hint', async ({ page }) => {
   // After space: first word should be hint
   await expect(firstWord).toHaveClass(/hint/);
   await expect(firstWord).not.toHaveClass(/hidden/);
+});
+
+test('teleprompter: reveal follows spoken progress beyond manual hints', async ({ page }) => {
+  await setupRehearse(page, LONG_FIXTURE_SCRIPT);
+  await startRehearsal(page);
+
+  await page.click('#btn-reveal-word');
+  await page.click('#btn-reveal-word');
+  await page.click('#btn-reveal-word');
+  await expect(page.locator('#scene-inner .line.mine.active .body .w.hint')).toHaveText(['one', 'two', 'three']);
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('one two three four five six seven eight nine ten'));
+  await page.click('#btn-reveal-word');
+
+  const body = page.locator('#scene-inner .line.mine.active .body');
+  await expect(body.locator('.w.said')).toHaveText([
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
+    'ten',
+  ]);
+  await expect(body.locator('.w.hint')).toHaveText(['eleven']);
+  await expect(body.locator('.w.hidden')).toHaveText(['▁▁▁▁▁▁']);
+});
+
+test('teleprompter: regressed transcript does not move reveal backwards', async ({ page }) => {
+  await setupRehearse(page, LONG_FIXTURE_SCRIPT);
+  await startRehearsal(page);
+
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('one two three four five six seven eight nine ten'));
+  await page.evaluate(() => window.__TT_TEST__.updateLiveTranscript('one two three'));
+  await page.click('#btn-reveal-word');
+
+  const state = await page.evaluate(() => window.__TT_TEST__.getState());
+  expect(state.latestLiveLastMatchedIndex).toBe(9);
+  expect(state.revealedTo).toBe(11);
+  await expect(page.locator('#scene-inner .line.mine.active .body .w.hint').last()).toHaveText('eleven');
+});
+
+test('teleprompter: space and reveal button use the same path', async ({ page }) => {
+  await setupRehearse(page);
+  await startRehearsal(page);
+
+  await page.keyboard.press('Space');
+  const afterSpace = await page.locator('#scene-inner .line.mine.active .body').innerHTML();
+  const spaceState = await page.evaluate(() => window.__TT_TEST__.getState());
+
+  await page.evaluate(() => window.__TT_TEST__.restart());
+  await page.click('#btn-reveal-word');
+  const afterButton = await page.locator('#scene-inner .line.mine.active .body').innerHTML();
+  const buttonState = await page.evaluate(() => window.__TT_TEST__.getState());
+
+  expect(afterButton).toBe(afterSpace);
+  expect(buttonState.revealedTo).toBe(spaceState.revealedTo);
 });
 
 test('teleprompter: live transcript fills matched words before finalization', async ({ page }) => {
@@ -264,4 +365,22 @@ test('teleprompter: space does not reveal when not user turn', async ({ page }) 
 
   const afterText = await partnerBody.innerText();
   expect(beforeText).toBe(afterText);
+});
+
+test('teleprompter: reveal button does nothing on partner turns', async ({ page }) => {
+  await setupRehearse(page);
+  await startRehearsal(page);
+  await page.evaluate(() => window.__TT_TEST__.nextLine());
+
+  const partnerBody = page.locator('#scene-inner .line.partner.active .body');
+  const beforeText = await partnerBody.innerText();
+  const beforeState = await page.evaluate(() => window.__TT_TEST__.getState());
+
+  await page.click('#btn-reveal-word');
+
+  const afterText = await partnerBody.innerText();
+  const afterState = await page.evaluate(() => window.__TT_TEST__.getState());
+  expect(afterText).toBe(beforeText);
+  expect(afterState.revealedTo).toBe(beforeState.revealedTo);
+  expect(afterState.lineIndex).toBe(beforeState.lineIndex);
 });

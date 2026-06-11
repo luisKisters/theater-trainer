@@ -328,17 +328,17 @@ finalized. Existing teleprompter tests remain green.
 
 ### Task 3: Drive Reveal From Matched Progress
 
-- [ ] Change Reveal behavior to use the latest live `lastMatchedIndex`.
-- [ ] Keep manually revealed words as hints, not said words.
-- [ ] If transcript progress moves beyond manually revealed words, next reveal starts after transcript progress.
-- [ ] If transcript regresses or repeats, do not move reveal backwards.
-- [ ] Update keyboard Space behavior to use the same reveal path.
-- [ ] Add or update Playwright tests in `tests/e2e/teleprompter.spec.js`.
-- [ ] Test reveal after 3 manual hints then 10 spoken words reveals the next unmatched word after spoken progress.
-- [ ] Test Space and button click behave identically.
-- [ ] Test reveal does nothing on partner turns.
-- [ ] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Change Reveal behavior to use the latest live `lastMatchedIndex`.
+- [x] Keep manually revealed words as hints, not said words.
+- [x] If transcript progress moves beyond manually revealed words, next reveal starts after transcript progress.
+- [x] If transcript regresses or repeats, do not move reveal backwards.
+- [x] Update keyboard Space behavior to use the same reveal path.
+- [x] Add or update Playwright tests in `tests/e2e/teleprompter.spec.js`.
+- [x] Test reveal after 3 manual hints then 10 spoken words reveals the next unmatched word after spoken progress.
+- [x] Test Space and button click behave identically.
+- [x] Test reveal does nothing on partner turns.
+- [x] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 

@@ -61,6 +61,7 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
   let turnFinalized = false;
   let liveTranscript = '';
   let liveProgress = null;
+  let latestLiveLastMatchedIndex = -1;
   const lineHistory = new Map(); // lineIndex → wordStates, persists corrections in context
   const compactNotes = new Map(); // lineIndex → summary of skipped context
 
@@ -169,6 +170,7 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
     turnFinalized = false;
     liveTranscript = '';
     liveProgress = null;
+    latestLiveLastMatchedIndex = -1;
   }
 
   const controller = {
@@ -179,8 +181,10 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       const line = currentLine();
       if (!line || !isUserLine(line)) return false;
       const words = tokenize(line.text);
-      if (revealedTo >= words.length) return false;
-      revealedTo++;
+      const transcriptProgressTo = latestLiveLastMatchedIndex + 1;
+      const revealStart = Math.max(revealedTo, transcriptProgressTo);
+      if (revealStart >= words.length) return false;
+      revealedTo = revealStart + 1;
       render();
       return true;
     },
@@ -207,6 +211,10 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       if (!line || !isUserLine(line) || turnFinalized) return null;
       liveTranscript = String(text ?? '');
       liveProgress = analyzeLineProgress(line.text, liveTranscript);
+      latestLiveLastMatchedIndex = Math.max(
+        latestLiveLastMatchedIndex,
+        liveProgress.lastMatchedIndex,
+      );
       render();
       return liveProgress;
     },
@@ -314,6 +322,7 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
         turnFinalized,
         liveTranscript,
         liveProgress,
+        latestLiveLastMatchedIndex,
         totalWords,
         processedWords,
         progress,
