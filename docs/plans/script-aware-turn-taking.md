@@ -275,24 +275,24 @@ At the end of the final task, after validation and push to main, output exactly:
 
 ### Task 1: Add Pure Line Progress Matching
 
-- [ ] Create `js/line-progress.js` with `normalizeToken`, `filterFillerTokens`, and `analyzeLineProgress`.
-- [ ] Reuse current matching behavior from `js/match.js` where practical without breaking existing `alignWords` callers.
-- [ ] Implement punctuation, case, umlaut, and small edit-distance tolerance.
-- [ ] Implement filler filtering using the locked filler word list.
-- [ ] Implement `matchedRatio`, `lastMatchedIndex`, `finalWordsMatched`, and `isLikelyDone`.
-- [ ] Add `tests/unit/line-progress.test.js`.
-- [ ] Test exact German line matching.
-- [ ] Test punctuation-insensitive matching.
-- [ ] Test umlaut and `ß` normalization.
-- [ ] Test filler words are ignored.
-- [ ] Test "let me think" does not create script mistakes.
-- [ ] Test 85 percent coverage plus final words returns likely done.
-- [ ] Test high coverage without final words does not return likely done.
-- [ ] Test final word plus 90 percent coverage returns likely done.
-- [ ] Test repeated earlier words do not regress progress.
-- [ ] Test wrong final words do not complete the line.
-- [ ] Run `npm run test:unit`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Create `js/line-progress.js` with `normalizeToken`, `filterFillerTokens`, and `analyzeLineProgress`.
+- [x] Reuse current matching behavior from `js/match.js` where practical without breaking existing `alignWords` callers.
+- [x] Implement punctuation, case, umlaut, and small edit-distance tolerance.
+- [x] Implement filler filtering using the locked filler word list.
+- [x] Implement `matchedRatio`, `lastMatchedIndex`, `finalWordsMatched`, and `isLikelyDone`.
+- [x] Add `tests/unit/line-progress.test.js`.
+- [x] Test exact German line matching.
+- [x] Test punctuation-insensitive matching.
+- [x] Test umlaut and `ß` normalization.
+- [x] Test filler words are ignored.
+- [x] Test "let me think" does not create script mistakes.
+- [x] Test 85 percent coverage plus final words returns likely done.
+- [x] Test high coverage without final words does not return likely done.
+- [x] Test final word plus 90 percent coverage returns likely done.
+- [x] Test repeated earlier words do not regress progress.
+- [x] Test wrong final words do not complete the line.
+- [x] Run `npm run test:unit`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 
@@ -302,23 +302,23 @@ Playwright test is required in this task.
 
 ### Task 2: Render Live Transcript And Word-Length Blanks
 
-- [ ] Update `js/teleprompter.js` to render `#live-transcript` below the active user line.
-- [ ] Add `updateLiveTranscript(text)` to the teleprompter controller.
-- [ ] Use `analyzeLineProgress` to fill matched words live.
-- [ ] Keep wrong words hidden during live speaking; show final corrections only after finalization.
-- [ ] Replace generic future placeholders with one blank span per real script word.
-- [ ] Make each blank length match its actual script word length with a minimum width of 2 characters.
-- [ ] Preserve current partner-line streaming behavior.
-- [ ] Preserve current context-line correction rendering.
-- [ ] Update `tests/e2e/teleprompter.spec.js`.
-- [ ] Test active user line shows one blank per actual word.
-- [ ] Test blank lengths correspond to actual script word lengths.
-- [ ] Test live transcript fills matched words before finalization.
-- [ ] Test `Heard:` text updates as transcript changes.
-- [ ] Test filler transcript does not fill script words.
-- [ ] Test wrong live words do not show red correction before finalization.
-- [ ] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Update `js/teleprompter.js` to render `#live-transcript` below the active user line.
+- [x] Add `updateLiveTranscript(text)` to the teleprompter controller.
+- [x] Use `analyzeLineProgress` to fill matched words live.
+- [x] Keep wrong words hidden during live speaking; show final corrections only after finalization.
+- [x] Replace generic future placeholders with one blank span per real script word.
+- [x] Make each blank length match its actual script word length with a minimum width of 2 characters.
+- [x] Preserve current partner-line streaming behavior.
+- [x] Preserve current context-line correction rendering.
+- [x] Update `tests/e2e/teleprompter.spec.js`.
+- [x] Test active user line shows one blank per actual word.
+- [x] Test blank lengths correspond to actual script word lengths.
+- [x] Test live transcript fills matched words before finalization.
+- [x] Test `Heard:` text updates as transcript changes.
+- [x] Test filler transcript does not fill script words.
+- [x] Test wrong live words do not show red correction before finalization.
+- [x] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 
@@ -328,17 +328,17 @@ finalized. Existing teleprompter tests remain green.
 
 ### Task 3: Drive Reveal From Matched Progress
 
-- [ ] Change Reveal behavior to use the latest live `lastMatchedIndex`.
-- [ ] Keep manually revealed words as hints, not said words.
-- [ ] If transcript progress moves beyond manually revealed words, next reveal starts after transcript progress.
-- [ ] If transcript regresses or repeats, do not move reveal backwards.
-- [ ] Update keyboard Space behavior to use the same reveal path.
-- [ ] Add or update Playwright tests in `tests/e2e/teleprompter.spec.js`.
-- [ ] Test reveal after 3 manual hints then 10 spoken words reveals the next unmatched word after spoken progress.
-- [ ] Test Space and button click behave identically.
-- [ ] Test reveal does nothing on partner turns.
-- [ ] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
-- [ ] Run `bash scripts/local-validate.sh`.
+- [x] Change Reveal behavior to use the latest live `lastMatchedIndex`.
+- [x] Keep manually revealed words as hints, not said words.
+- [x] If transcript progress moves beyond manually revealed words, next reveal starts after transcript progress.
+- [x] If transcript regresses or repeats, do not move reveal backwards.
+- [x] Update keyboard Space behavior to use the same reveal path.
+- [x] Add or update Playwright tests in `tests/e2e/teleprompter.spec.js`.
+- [x] Test reveal after 3 manual hints then 10 spoken words reveals the next unmatched word after spoken progress.
+- [x] Test Space and button click behave identically.
+- [x] Test reveal does nothing on partner turns.
+- [x] Run `npx playwright test tests/e2e/teleprompter.spec.js`.
+- [x] Run `bash scripts/local-validate.sh`.
 
 Acceptance criteria:
 

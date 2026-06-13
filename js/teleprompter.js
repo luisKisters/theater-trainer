@@ -1,4 +1,5 @@
 import { alignWords } from './match.js';
+import { analyzeLineProgress } from './line-progress.js';
 
 function escHtml(str) {
   return String(str)
@@ -34,8 +35,12 @@ function matchedPrefixLength(expected, spoken) {
 }
 
 function hiddenDashes(word) {
-  const len = Math.max(2, word.replace(/[.,!?;:'"()]/g, '').length);
+  const len = Math.max(2, word.replace(/[^\p{Letter}\p{Number}]/gu, '').length);
   return '▁'.repeat(len);
+}
+
+function renderHiddenWord(word, className = 'w hidden') {
+  return `<span class="${className}" data-word-length="${hiddenDashes(word).length}">${escHtml(hiddenDashes(word))}</span>`;
 }
 
 /**
@@ -54,6 +59,9 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
   let partnerWords = 0; // how many words shown for active partner line
   let wordStates = [];  // aligned correction states after finalizeTurn
   let turnFinalized = false;
+  let liveTranscript = '';
+  let liveProgress = null;
+  let latestLiveLastMatchedIndex = -1;
   const lineHistory = new Map(); // lineIndex → wordStates, persists corrections in context
   const compactNotes = new Map(); // lineIndex → summary of skipped context
 
@@ -87,11 +95,18 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       }).join(' ');
     }
 
+    const liveMatched = new Set(
+      (liveProgress?.aligned || [])
+        .map((entry, idx) => entry.matched ? idx : -1)
+        .filter(idx => idx >= 0),
+    );
+    const curIndex = words.findIndex((_, idx) => !liveMatched.has(idx) && idx >= revealedTo);
+
     return words.map((w, idx) => {
-      const cur = idx === wordPtr ? ' cur' : '';
-      if (idx < wordPtr) return `<span class="w said">${escHtml(w)}</span>`;
+      const cur = idx === curIndex ? ' cur' : '';
+      if (liveMatched.has(idx)) return `<span class="w said">${escHtml(w)}</span>`;
       if (idx < revealedTo) return `<span class="w hint${cur}">${escHtml(w)}</span>`;
-      return `<span class="w hidden${cur}">${escHtml(hiddenDashes(w))}</span>`;
+      return renderHiddenWord(w, `w hidden${cur}`);
     }).join(' ');
   }
 
@@ -116,7 +131,9 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
   }
 
   function renderFutureLine(line) {
-    return isUserLine(line) ? '▁▁▁▁  ▁▁▁  ▁▁▁▁▁' : '▁▁▁▁  ▁▁▁▁▁▁  ▁▁▁';
+    return tokenize(line.text)
+      .map(w => renderHiddenWord(w, 'w hidden future-blank'))
+      .join(' ');
   }
 
   function render() {
@@ -134,6 +151,7 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       return `${note ? `<div class="compact-note" data-idx="${idx}">${escHtml(note)}</div>` : ''}<div class="${lineClasses(idx)}${isDone ? ' done' : ''}" data-idx="${idx}">
         <div class="who">${escHtml(characterName(line))}</div>
         <div class="body">${body}</div>
+        ${idx === lineIndex && isUserLine(line) && !turnFinalized ? `<div id="live-transcript" class="live-transcript" aria-live="polite">Heard: ${escHtml(liveTranscript)}</div>` : ''}
       </div>`;
     }).join('');
 
@@ -150,6 +168,9 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
     partnerWords = 0;
     wordStates = [];
     turnFinalized = false;
+    liveTranscript = '';
+    liveProgress = null;
+    latestLiveLastMatchedIndex = -1;
   }
 
   const controller = {
@@ -160,8 +181,10 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       const line = currentLine();
       if (!line || !isUserLine(line)) return false;
       const words = tokenize(line.text);
-      if (revealedTo >= words.length) return false;
-      revealedTo++;
+      const transcriptProgressTo = latestLiveLastMatchedIndex + 1;
+      const revealStart = Math.max(revealedTo, transcriptProgressTo);
+      if (revealStart >= words.length) return false;
+      revealedTo = revealStart + 1;
       render();
       return true;
     },
@@ -180,6 +203,20 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       if (!line || isUserLine(line)) return;
       partnerWords = Math.max(partnerWords, matchedPrefixLength(line.text, text));
       render();
+    },
+
+    /** Update the live user transcript and reveal only matched script words. */
+    updateLiveTranscript(text) {
+      const line = currentLine();
+      if (!line || !isUserLine(line) || turnFinalized) return null;
+      liveTranscript = String(text ?? '');
+      liveProgress = analyzeLineProgress(line.text, liveTranscript);
+      latestLiveLastMatchedIndex = Math.max(
+        latestLiveLastMatchedIndex,
+        liveProgress.lastMatchedIndex,
+      );
+      render();
+      return liveProgress;
     },
 
     /** Called when the partner finishes speaking. Updates display, does not auto-advance. */
@@ -203,6 +240,8 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       turnFinalized = true;
       wordPtr = tokenize(line.text).length;
       revealedTo = wordPtr;
+      liveTranscript = '';
+      liveProgress = null;
       render();
     },
 
@@ -268,12 +307,26 @@ export function createTeleprompter(containerEl, script, userRoleId, options = {}
       const active = currentLine();
       const activeWords = active
         ? isUserLine(active)
-          ? wordPtr
+          ? turnFinalized
+            ? wordPtr
+            : liveProgress?.matchedCount || wordPtr
           : partnerWords
         : 0;
       const processedWords = Math.min(totalWords, completedWords + activeWords);
       const progress = totalWords > 0 ? processedWords / totalWords : 1;
-      return { lineIndex, wordPtr, revealedTo, partnerWords, turnFinalized, totalWords, processedWords, progress };
+      return {
+        lineIndex,
+        wordPtr,
+        revealedTo,
+        partnerWords,
+        turnFinalized,
+        liveTranscript,
+        liveProgress,
+        latestLiveLastMatchedIndex,
+        totalWords,
+        processedWords,
+        progress,
+      };
     },
   };
 
